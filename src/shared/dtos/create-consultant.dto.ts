@@ -40,6 +40,10 @@ export class CreateConsultantDto {
 
     @IsNotEmpty()
     @IsString()
+    readonly consultations_carried_out: string
+
+    @IsNotEmpty()
+    @IsString()
     readonly status: string
 
     @IsNotEmpty()

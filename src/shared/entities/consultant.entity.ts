@@ -33,6 +33,9 @@ export class Consultant {
     @Column({ name:'image_consultant', nullable: false })
     image_consultant: string;
 
+    @Column({name:'consultations_carried_out', nullable: true})
+    consultations_carried_out: string;
+
     @Column({ name:'status', nullable: false })
     status: string;
 
