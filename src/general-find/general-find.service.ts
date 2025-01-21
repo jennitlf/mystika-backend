@@ -50,11 +50,13 @@ export class GeneralFindService {
         'consultant.name as consultant_name',
         'consultant.profile_data as consultant_profile',
         'consultant.image_consultant as img',
+        'consultant.status as status',
         'consultantSpecialty.duration as duration',
         'consultantSpecialty.value_per_duration as value_per_duration',
         'specialty.id_specialty as id_specialty',
         'specialty.name_specialty as specialty_name',
-      ]);
+      ])
+      .where('consultant.status = :status', { status: 'ativo' });
   
     // Filtro por nome
     if (name) {
@@ -90,6 +92,7 @@ export class GeneralFindService {
           consultant_name: item.consultant_name,
           img: item.img,
           consultant_profile: item.consultant_profile,
+          status: item.status,
           specialties: [],
         };
         acc.push(consultant);
@@ -118,3 +121,7 @@ export class GeneralFindService {
   }
   
 }
+function where(arg0: string, arg1: { status: string; }) {
+  throw new Error('Function not implemented.');
+}
+
