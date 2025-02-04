@@ -8,17 +8,19 @@ import { ConsultantSpecialtyModule } from './consultant-specialty/consultant-spe
 import { AppController } from './app.controller';
 import { GeneralFindModule } from './general-find/general-find.module';
 import { UserModule } from './user/user.module';
+import { AuthModule } from './auth/auth.module';
 
 
 @Module({
   imports: [
     ConfigModule.forRoot({
       isGlobal:true,
-    }), 
+    }),
+    AuthModule, 
     DatabaseModule,
     ConsultantModule, 
     SpecialtyModule, 
-    ConsultantSpecialtyModule, GeneralFindModule, UserModule
+    ConsultantSpecialtyModule, GeneralFindModule, UserModule, AuthModule
   ],
   controllers: [AppController],
   providers: [AppService],

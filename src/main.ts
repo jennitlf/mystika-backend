@@ -15,6 +15,7 @@ async function bootstrap() {
     .setTitle('Mystika')
     .setDescription('Esta documentação visa esclarecer as funcionalidades do site Mystika')
     .setVersion('1.0')
+    .addBearerAuth()
     // .addTag('APIs')
     .build();
 
