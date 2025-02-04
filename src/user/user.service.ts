@@ -1,25 +1,67 @@
-import { Injectable } from '@nestjs/common';
-
+import { Injectable, NotFoundException } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+import { Costumer } from 'src/shared/entities/costumer.entity';
 
 @Injectable()
 export class UserService {
-  // create(createUserDto: CreateUserDto) {
-  //   return 'This action adds a new user';
+  static findByEmail(email: string) {
+    throw new Error('Method not implemented.');
+  }
+  static create(userDto: { password: string; name: string; phone: string; email: string; status: string; }) {
+    throw new Error('Method not implemented.');
+  }
+
+  constructor(
+    @InjectRepository(Costumer)
+    private readonly costumerRepository: Repository<Costumer>
+  ){}
+
+  create(createUserDto: any) {
+    const costumer = this.costumerRepository.create(createUserDto)
+    return this.costumerRepository.save(costumer);
+  }
+
+  async findAll() {
+    return this.costumerRepository.find();
+  }
+
+  async findByEmail(email: string) {
+    const costumer = await this.costumerRepository.findOne({
+      where:{email:email}
+    })
+    if(!costumer){
+      throw new NotFoundException(`Costumer not found`)
+    }
+
+    return costumer;
+  }
+
+  // async findOne(id: string) {
+  //   const costumer = await this.costumerRepository.findOne({
+  //     where:{id_costumer:+id}
+  //   })
+  //   if(!costumer){
+  //     throw new NotFoundException(`Costumer not found`)
+  //   }
+  //   return costumer;
   // }
 
-  // findAll() {
-  //   return `This action returns all user`;
-  // }
+  async update(id: number, updateUserDto: any) {
+    const costumer = await this.costumerRepository.preload({
+      ...updateUserDto,
+      id_costumer: +id
+    })
+    return this.costumerRepository.save(costumer);
+  }
 
-  // findOne(id: number) {
-  //   return `This action returns a #${id} user`;
-  // }
-
-  // update(id: number, updateUserDto: UpdateUserDto) {
-  //   return `This action updates a #${id} user`;
-  // }
-
-  // remove(id: number) {
-  //   return `This action removes a #${id} user`;
-  // }
+  async remove(id: string) {
+    const costumer = await this.costumerRepository.findOne({
+      where: {id_costumer: +id}
+    })
+    if (!costumer) {
+      throw new NotFoundException(`Costumer ID: ${id} not found`)
+    }
+    return this.costumerRepository.remove(costumer);
+  }
 }
