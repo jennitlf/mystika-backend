@@ -25,7 +25,7 @@ export class SpecialtyService {
 
   async findOne(id: string) {
     const specialty = await this.specialtyRepository.findOne({
-      where:{id_specialty: +id}
+      where:{id: +id}
     })
 
     if(!specialty){
@@ -37,7 +37,7 @@ export class SpecialtyService {
   async update(id: string, updateSpecialtyDto: any) {
     const specialty = await this.specialtyRepository.preload({
       ...updateSpecialtyDto,
-      id_specialty: +id
+      id: +id
     })
     if(!specialty){
       throw new NotFoundException(`Specialty ID: ${id} not found`)
@@ -47,7 +47,7 @@ export class SpecialtyService {
 
   async remove(id: string) {
     const specialty = await this.specialtyRepository.findOne({
-      where: {id_specialty: +id}
+      where: {id: +id}
     })
     if (!specialty){
       throw new NotFoundException(`Specialty ID: ${id} not found`)

@@ -34,7 +34,7 @@ export class ConsultantSpecialtyService {
     if (consultantName) {
       query.andWhere('consultant.name LIKE :consultantName', { consultantName: `%${consultantName}%` });
     }
-    if (idConsultant) query.andWhere('consultant.id_consultant = :idConsultant', {idConsultant})
+    if (idConsultant) query.andWhere('consultant.id = :idConsultant', {idConsultant})
 
     query.skip(skip).take(limit);
 
@@ -52,7 +52,7 @@ export class ConsultantSpecialtyService {
 
   async findOne(id: string) {
     const consultantSpecialty = await this.consultantSpecialtyRepository.findOne({
-      where: {id_consultant_specialty: +id},
+      where: {id: +id},
     })
 
     if(!consultantSpecialty){
@@ -65,7 +65,7 @@ export class ConsultantSpecialtyService {
   async update(id: string, updateConsultantSpecialtyDto: any) {
     const consultantSpecialty = await this.consultantSpecialtyRepository.preload({
       ...updateConsultantSpecialtyDto,
-      id_consultant_specialty: +id
+      id: +id
     })
     if(!consultantSpecialty){
       throw new NotFoundException(`Consultant Specialty ID: ${id} not found`)
@@ -75,7 +75,7 @@ export class ConsultantSpecialtyService {
 
   async remove(id: string) {
     const consultant_specialty = await this.consultantSpecialtyRepository.findOne({
-      where: {id_consultant_specialty: +id}
+      where: {id: +id}
     })
     if (!consultant_specialty) {
       throw new NotFoundException(`Consultant Specialty ID: ${id} not found`)

@@ -4,7 +4,7 @@ import { ConsultantSpecialty } from './consultant_specialty.entity';
 @Entity('consultant')
 export class Consultant {
     @PrimaryGeneratedColumn()
-    id_consultant: number;
+    id: number;
 
     @Column({ name:'name', nullable: false })
     name: string;

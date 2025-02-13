@@ -9,6 +9,7 @@ import { AppController } from './app.controller';
 import { GeneralFindModule } from './general-find/general-find.module';
 import { UserModule } from './user/user.module';
 import { AuthModule } from './auth/auth.module';
+import { ScheduleConsultantModule } from './schedule-consultant/schedule-consultant.module';
 
 
 @Module({
@@ -20,7 +21,7 @@ import { AuthModule } from './auth/auth.module';
     DatabaseModule,
     ConsultantModule, 
     SpecialtyModule, 
-    ConsultantSpecialtyModule, GeneralFindModule, UserModule, AuthModule
+    ConsultantSpecialtyModule, GeneralFindModule, UserModule, AuthModule, ScheduleConsultantModule
   ],
   controllers: [AppController],
   providers: [AppService],

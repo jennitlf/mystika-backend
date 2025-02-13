@@ -50,14 +50,14 @@ export class UserService {
   async update(id: number, updateUserDto: any) {
     const costumer = await this.costumerRepository.preload({
       ...updateUserDto,
-      id_costumer: +id
+      id: +id
     })
     return this.costumerRepository.save(costumer);
   }
 
   async remove(id: string) {
     const costumer = await this.costumerRepository.findOne({
-      where: {id_costumer: +id}
+      where: {id: +id}
     })
     if (!costumer) {
       throw new NotFoundException(`Costumer ID: ${id} not found`)

@@ -50,7 +50,7 @@ export class ConsultantService {
   async findOne(id: string) {
 
     const consultant = await this.consultantRepository.findOne({
-      where:{id_consultant: +id},
+      where:{id: +id},
     })
 
     if (!consultant) {
@@ -62,7 +62,7 @@ export class ConsultantService {
   async update(id: string, updateConsultantDto: any) {
     const consultant = await this.consultantRepository.preload({
       ...updateConsultantDto,
-      id_consultant: +id
+      id: +id
     })
     if (!consultant) {
       throw new NotFoundException(`Consultant ID: ${id} not found`)
@@ -72,7 +72,7 @@ export class ConsultantService {
 
   async remove(id: string) {
     const consultant = await this.consultantRepository.findOne({
-      where: {id_consultant: +id}
+      where: {id: +id}
     })
     if (!consultant) {
       throw new NotFoundException(`Consultant ID: ${id} not found`)

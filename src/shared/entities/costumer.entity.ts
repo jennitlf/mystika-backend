@@ -3,7 +3,7 @@ import { Entity, Column, PrimaryGeneratedColumn } from 'typeorm'
 @Entity('costumer')
 export class Costumer{
     @PrimaryGeneratedColumn()
-    id_costumer: number;
+    id: number;
 
     @Column({ name: 'name', nullable: false })
     name: string;

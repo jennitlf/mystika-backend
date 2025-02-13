@@ -46,14 +46,14 @@ export class GeneralFindService {
       .leftJoinAndSelect('consultant.consultantSpecialties', 'consultantSpecialty')
       .leftJoinAndSelect('consultantSpecialty.specialty', 'specialty')
       .select([
-        'consultant.id_consultant as consultant_id',
+        'consultant.id as consultant_id',
         'consultant.name as consultant_name',
         'consultant.profile_data as consultant_profile',
         'consultant.image_consultant as img',
         'consultant.status as status',
         'consultantSpecialty.duration as duration',
         'consultantSpecialty.value_per_duration as value_per_duration',
-        'specialty.id_specialty as id_specialty',
+        'specialty.id as id_specialty',
         'specialty.name_specialty as specialty_name',
       ])
       .where('consultant.status = :status', { status: 'ativo' });
@@ -99,7 +99,7 @@ export class GeneralFindService {
       }
   
       consultant.specialties.push({
-        id_specialty: item.id_specialty,
+        id: item.id,
         name: item.specialty_name,
         duration: item.duration,
         value_per_duration: item.value_per_duration,

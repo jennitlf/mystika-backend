@@ -1,13 +1,14 @@
-import { Entity, Column, PrimaryGeneratedColumn, ManyToOne, JoinColumn, CreateDateColumn, UpdateDateColumn, Unique } from 'typeorm';
+import { Entity, Column, PrimaryGeneratedColumn, ManyToOne, JoinColumn, CreateDateColumn, UpdateDateColumn, Unique, OneToMany } from 'typeorm';
 import { Consultant } from './consultant.entity';
 import { Specialty } from './specialty.entity';
+import { ScheduleConsultant } from './schedule_consultant.entity';
 
 
 @Entity('consultant_specialty')
 @Unique(['id_consultant', 'id_specialty'])
 export class ConsultantSpecialty {
     @PrimaryGeneratedColumn()
-    id_consultant_specialty: number;
+    id: number;
 
     @Column({ name:'id_consultant', nullable: false })
     id_consultant: number;
@@ -36,4 +37,7 @@ export class ConsultantSpecialty {
     @ManyToOne(() => Specialty, (specialty) => specialty.consultantSpecialties)
     @JoinColumn({ name: 'id_specialty' }) 
     specialty: Specialty;
+    
+    @OneToMany(() => ScheduleConsultant, (scheduleConsultant) => scheduleConsultant.consultantSpecialty)
+    scheduleConsultant: ScheduleConsultant[];
 }
