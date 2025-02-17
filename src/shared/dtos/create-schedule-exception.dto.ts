@@ -1,4 +1,4 @@
-import { IsString, IsNumber, IsDate, IsNotEmpty } from "class-validator";
+import { IsString, IsNumber, IsNotEmpty, IsISO8601 } from "class-validator";
 
 export default class CreateScheduleExceptionDto {
 
@@ -7,8 +7,8 @@ export default class CreateScheduleExceptionDto {
     readonly id_schedule_consultant: number;
 
     @IsNotEmpty()
-    @IsDate()
-    readonly date_exception: Date;
+    @IsISO8601()
+    readonly date_exception: string;
 
     @IsNotEmpty()
     @IsNumber()

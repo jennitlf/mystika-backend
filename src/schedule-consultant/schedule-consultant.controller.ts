@@ -1,34 +1,32 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import { Controller, Get, Post, Body, Put, Param, Delete, Query } from '@nestjs/common';
 import { ScheduleConsultantService } from './schedule-consultant.service';
-import { CreateScheduleConsultantDto } from '../shared/dtos/create-schedule-consultant.dto';
-import { UpdateScheduleConsultantDto } from '../shared/dtos/update-schedule-consultant.dto';
+import { CreateScheduleConsultantDto } from 'src/shared/dtos/create-schedule-consultant.dto';
+import { ApiQuery } from '@nestjs/swagger';
 
 @Controller('schedule-consultant')
 export class ScheduleConsultantController {
   constructor(private readonly scheduleConsultantService: ScheduleConsultantService) {}
 
-  @Post()
-  create(@Body() createScheduleConsultantDto: CreateScheduleConsultantDto) {
-    return this.scheduleConsultantService.create(createScheduleConsultantDto);
-  }
+    @Get(':idConsultantSpecialty/timeslots')
+    @ApiQuery({ name: 'date', required: false, type: String, example: '2025-01-01' })
+    async getTimeslots(
+        @Param('idConsultantSpecialty') idConsultantSpecialty: number,
+        @Query('date') date?: string,
+    ) {
+        return await this.scheduleConsultantService.getTimeslots(
+            idConsultantSpecialty,
+            date, 
+        );
+    }
 
-  @Get()
-  findAll() {
-    return this.scheduleConsultantService.findAll();
-  }
+    @Post()
+    create (@Body() createScheduleConsultantDto: CreateScheduleConsultantDto){
+        return this.scheduleConsultantService.create(createScheduleConsultantDto)
+    }
 
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.scheduleConsultantService.findOne(id);
-  }
+    @Delete(':id')
+    remove (@Param('id') id: string) {
+        return this.scheduleConsultantService.remove(id)
+    }
 
-  @Patch(':id')
-  update(@Param('id') id: string, @Body() updateScheduleConsultantDto: UpdateScheduleConsultantDto) {
-    return this.scheduleConsultantService.update(+id, updateScheduleConsultantDto);
-  }
-
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.scheduleConsultantService.remove(+id);
-  }
 }

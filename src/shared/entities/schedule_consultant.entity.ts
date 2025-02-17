@@ -32,3 +32,8 @@ export class ScheduleConsultant {
     @OneToMany(()=> ScheduleException, (scheduleException)=> scheduleException.scheduleConsultant)
     scheduleException: ScheduleException[]
 }
+
+export class ScheduleAvailabilityDto {
+    readonly date: Date;
+    readonly available_times: string[];
+}

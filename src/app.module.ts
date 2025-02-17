@@ -10,6 +10,7 @@ import { GeneralFindModule } from './general-find/general-find.module';
 import { UserModule } from './user/user.module';
 import { AuthModule } from './auth/auth.module';
 import { ScheduleConsultantModule } from './schedule-consultant/schedule-consultant.module';
+import { ScheduleExceptionModule } from './schedule-exception/schedule-exception.module';
 
 
 @Module({
@@ -21,7 +22,7 @@ import { ScheduleConsultantModule } from './schedule-consultant/schedule-consult
     DatabaseModule,
     ConsultantModule, 
     SpecialtyModule, 
-    ConsultantSpecialtyModule, GeneralFindModule, UserModule, AuthModule, ScheduleConsultantModule
+    ConsultantSpecialtyModule, GeneralFindModule, UserModule, AuthModule, ScheduleConsultantModule, ScheduleExceptionModule
   ],
   controllers: [AppController],
   providers: [AppService],
