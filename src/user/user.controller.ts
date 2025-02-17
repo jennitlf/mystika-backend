@@ -1,8 +1,8 @@
 import { Controller, Get, Post, Body, Put, Param, Delete, UseGuards } from '@nestjs/common';
 import { UserService } from './user.service';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
-import { CreateCostumerDto } from 'src/shared/dtos/create-costumer.dto';
-import { UpdateCostumerDto } from 'src/shared/dtos/update-costumer.dto';
+import { CreateCustomerDto } from 'src/shared/dtos/create-customer.dto';
+import { UpdateCostumerDto } from 'src/shared/dtos/update-customer.dto';
 import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
 
 
@@ -13,7 +13,7 @@ export class UserController {
   constructor(private readonly userService: UserService) {}
 
   @Post()
-  create(@Body() createCostumerDto: CreateCostumerDto) {
+  create(@Body() createCostumerDto: CreateCustomerDto) {
     return this.userService.create(createCostumerDto);
   }
 

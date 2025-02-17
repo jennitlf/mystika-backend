@@ -4,14 +4,14 @@ import { AuthController } from './auth.controller';
 import { JwtModule } from '@nestjs/jwt';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { Costumer } from 'src/shared/entities/costumer.entity';
+import { Customer } from 'src/shared/entities/customer.entity';
 import { UserModule } from 'src/user/user.module';
 import { JwtStrategy } from './jwt-strategy';
 
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Costumer]),
+    TypeOrmModule.forFeature([Customer]),
     JwtModule.registerAsync({
       imports: [ConfigModule], 
       inject: [ConfigService], 

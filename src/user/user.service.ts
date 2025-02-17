@@ -1,7 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { Costumer } from 'src/shared/entities/costumer.entity';
+import { Customer } from 'src/shared/entities/customer.entity';
 
 @Injectable()
 export class UserService {
@@ -13,8 +13,8 @@ export class UserService {
   }
 
   constructor(
-    @InjectRepository(Costumer)
-    private readonly costumerRepository: Repository<Costumer>
+    @InjectRepository(Customer)
+    private readonly costumerRepository: Repository<Customer>
   ){}
 
   create(createUserDto: any) {
