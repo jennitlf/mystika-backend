@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { HttpException, HttpStatus, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Customer } from 'src/shared/entities/customer.entity';
@@ -17,7 +17,14 @@ export class UserService {
     private readonly costumerRepository: Repository<Customer>
   ){}
 
-  create(createUserDto: any) {
+  async create(createUserDto: any) {
+    const { email } = createUserDto
+    const verifiedUser = this.costumerRepository.findOne({
+      where: {email: email}
+    })
+    if(verifiedUser){
+      throw new HttpException(`email already registered: ${email}`, HttpStatus.CONFLICT )
+    }
     const costumer = this.costumerRepository.create(createUserDto)
     return this.costumerRepository.save(costumer);
   }
