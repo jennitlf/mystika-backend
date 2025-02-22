@@ -11,6 +11,7 @@ import { UserModule } from './user/user.module';
 import { AuthModule } from './auth/auth.module';
 import { ScheduleConsultantModule } from './schedule-consultant/schedule-consultant.module';
 import { ScheduleExceptionModule } from './schedule-exception/schedule-exception.module';
+import { ConsultationModule } from './consultation/consultation.module';
 
 
 @Module({
@@ -22,7 +23,7 @@ import { ScheduleExceptionModule } from './schedule-exception/schedule-exception
     DatabaseModule,
     ConsultantModule, 
     SpecialtyModule, 
-    ConsultantSpecialtyModule, GeneralFindModule, UserModule, AuthModule, ScheduleConsultantModule, ScheduleExceptionModule
+    ConsultantSpecialtyModule, GeneralFindModule, UserModule, AuthModule, ScheduleConsultantModule, ScheduleExceptionModule, ConsultationModule
   ],
   controllers: [AppController],
   providers: [AppService],
