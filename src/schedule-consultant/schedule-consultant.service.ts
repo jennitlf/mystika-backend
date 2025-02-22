@@ -1,9 +1,11 @@
 import { HttpException, HttpStatus, Injectable, NotFoundException } from '@nestjs/common';
-import { Brackets, Repository } from 'typeorm';
+import { Brackets, Raw, Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
 import { ScheduleConsultant, ScheduleAvailabilityDto } from 'src/shared/entities/schedule_consultant.entity';
 import { ScheduleException } from 'src/shared/entities/schedule_exception.entity';
 import { DateUtilsService } from '../shared/utils/date.utils';
+import { Consultation } from 'src/shared/entities/consultation.entity';
+import { query } from 'express';
 
 @Injectable()
 export class ScheduleConsultantService {
@@ -12,10 +14,10 @@ export class ScheduleConsultantService {
 
     @InjectRepository(ScheduleConsultant)
     private readonly scheduleConsultantRepository: Repository<ScheduleConsultant>,
-
     @InjectRepository(ScheduleException)
     private readonly scheduleExceptionRepository: Repository<ScheduleException>,
-
+    @InjectRepository(Consultation)
+    private readonly consultationRepository: Repository<Consultation>,
     private readonly dateUtilsService: DateUtilsService
 
   ){}
@@ -35,64 +37,97 @@ export class ScheduleConsultantService {
 
   private generateTimes(start: string, end: string, duration: number): string[] {
     const times = [];
-    let currentTime = this.parseTime(start);
-    const endTime = this.parseTime(end);
-  
+    let currentTime = this.parseTime(start); 
+    const endTime = this.parseTime(end);    
     while (currentTime.getTime() + duration * 60000 <= endTime.getTime()) {
-      times.push(this.formatTime(currentTime));
-      currentTime.setMinutes(currentTime.getMinutes() + duration);
+      times.push(this.formatTime(currentTime)); 
+      currentTime.setMinutes(currentTime.getMinutes() + duration);                 
     }
-    
     return times;
   }
 
   async getTimeslots(idConsultantSpecialty: number, date: string | null): Promise<ScheduleAvailabilityDto[]> {
-    const scheduleDate = date ? new Date(date + 'T00:00:00') : null;
-    const now = this.dateUtilsService.getZonedDate(); 
-    
-    now.setSeconds(0, 0); // Normalizar para evitar problemas com milissegundos
-
+    const scheduleDate = date 
+      ? this.dateUtilsService.getZonedDate(new Date(date + 'T00:00:00')) 
+      : null;
+    const now = this.dateUtilsService.getZonedDate();
+    now.setSeconds(0, 0); 
+  
     const schedules = await this.scheduleConsultantRepository.find({
-        where: {
-            id_consultant_specialty: idConsultantSpecialty,
-            ...(scheduleDate && { date: scheduleDate }),
-        },
-        relations: ['scheduleException', 'consultantSpecialty'],
+      where: {
+        id_consultant_specialty: idConsultantSpecialty,
+        ...(scheduleDate && { date: scheduleDate }),
+      },
+      relations: ['scheduleException', 'consultantSpecialty'],
     });
-
-    // Filtrar as datas anteriores ao dia atual
+  
+   
     const validSchedules = schedules.filter((schedule) => {
-        const scheduleDate = this.dateUtilsService.getZonedDate(new Date(schedule.date + 'T00:00:00'));
-        return scheduleDate >= now || scheduleDate.toDateString() === now.toDateString();
+      const schDt = this.dateUtilsService.getZonedDate(new Date(schedule.date + 'T00:00:00'));
+      return schDt >= now || schDt.toDateString() === now.toDateString();
     });
-
-    const timeslots = validSchedules.map((schedule) => {
-        
-        const { hour_initial, hour_end, date, scheduleException, consultantSpecialty } = schedule;
+    console.log("Agendas válidas", validSchedules);
+  
+    const timeslots = await Promise.all(
+      validSchedules.map(async (schedule) => {
+        const { hour_initial, hour_end, date, scheduleException, consultantSpecialty, id } = schedule;
         if (!consultantSpecialty) {
-            throw new Error('ConsultantSpecialty não encontrado');
+          throw new Error('ConsultantSpecialty não encontrado');
         }
         const { duration } = consultantSpecialty;
         const allTimes = this.generateTimes(hour_initial, hour_end, duration);
+  
+        
         const relevantExceptions = scheduleException.filter(
-            (ex) => ex.date_exception.toISOString().split('T')[0] === this.dateUtilsService.getZonedDate(new Date(date + 'T00:00:00')).toISOString().split('T')[0]
+          (ex) =>
+            ex.date_exception.toISOString().split('T')[0] ===
+            this.dateUtilsService.getZonedDate(new Date(date + 'T00:00:00')).toISOString().split('T')[0]
         );
-        const unavailableTimes = relevantExceptions.map((ex) => this.formatTime(this.parseTime(ex.unavaiable_time)));
+        const unavailableTimes = relevantExceptions.map((ex) =>
+          this.formatTime(this.parseTime(ex.unavaiable_time))
+        );
         const availableTimes = allTimes.filter((time) => !unavailableTimes.includes(time));
   
-        // Filtrar horários anteriores ao momento atual, se a data for hoje
-        const filteredTimes = this.dateUtilsService.getZonedDate(new Date(date + 'T00:00:00')).toDateString() === now.toDateString()
-        ? availableTimes.filter((time) => this.parseTime(time) > now)
-        : availableTimes;
         
+        const schDate = this.dateUtilsService.getZonedDate(new Date(date + 'T00:00:00'));
+        const filteredTimes = schDate.toDateString() === now.toDateString()
+          ? availableTimes.filter((time) => this.parseTime(time) > now)
+          : availableTimes;
+  
+        
+        const scheduleDateISO = schDate.toISOString().split('T')[0];
+  
+        
+        const consultations = await this.consultationRepository.find({
+          where: {
+            id_schedule_consultant: id,
+            appoinment_date: Raw(alias => `DATE(${alias}) = '${scheduleDateISO}'`),
+          },
+        });
+  
+        
+        const bookedTimes = consultations.map((consultation) =>
+          consultation.appoinment_time.slice(0, 5)
+        );
+        console.log(`Booked times for schedule ID ${id} on ${scheduleDateISO}:`, bookedTimes);
+  
+        
+        const availableTimesAfterBooking = filteredTimes.filter(
+          (time) => !bookedTimes.includes(time)
+        );
+        console.log(`Available times after booking for schedule ID ${id}:`, availableTimesAfterBooking);
+  
         return {
-            date,
-            available_times: filteredTimes,
+          schedule_id: id,
+          date,
+          available_times: availableTimesAfterBooking,
         };
-    });
-
+      })
+    );
+  
     return timeslots;
   }
+  
 
 
 

@@ -5,9 +5,10 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { ScheduleConsultant } from 'src/shared/entities/schedule_consultant.entity';
 import { ScheduleException } from 'src/shared/entities/schedule_exception.entity';
 import { DateUtilsService } from 'src/shared/utils/date.utils';
+import { Consultation } from 'src/shared/entities/consultation.entity';
 
 @Module({
-  imports: [ TypeOrmModule.forFeature([ScheduleConsultant, ScheduleException])],
+  imports: [ TypeOrmModule.forFeature([ScheduleConsultant, ScheduleException, Consultation])],
   controllers: [ScheduleConsultantController],
   providers: [ScheduleConsultantService, DateUtilsService],
 })
