@@ -2,6 +2,7 @@ import { Entity, Column, PrimaryGeneratedColumn, ManyToOne, JoinColumn, CreateDa
 import { Consultant } from './consultant.entity';
 import { Specialty } from './specialty.entity';
 import { ScheduleConsultant } from './schedule_consultant.entity';
+import { Consultation } from './consultation.entity';
 
 
 @Entity('consultant_specialty')
@@ -40,4 +41,7 @@ export class ConsultantSpecialty {
     
     @OneToMany(() => ScheduleConsultant, (scheduleConsultant) => scheduleConsultant.consultantSpecialty)
     scheduleConsultant: ScheduleConsultant[];
+
+    @OneToMany(()=>Consultation, (consultation)=>consultation.consultantSpecialty)
+    consultation: Consultation[];
 }
