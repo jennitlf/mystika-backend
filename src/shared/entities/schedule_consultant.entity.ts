@@ -1,6 +1,7 @@
 import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn, OneToMany } from "typeorm";
 import { ConsultantSpecialty } from "./consultant_specialty.entity";
 import { ScheduleException } from "./schedule_exception.entity";
+import { Consultation } from "./consultation.entity";
 
 @Entity('schedule_consultant')
 export class ScheduleConsultant {
@@ -31,6 +32,9 @@ export class ScheduleConsultant {
 
     @OneToMany(()=> ScheduleException, (scheduleException)=> scheduleException.scheduleConsultant)
     scheduleException: ScheduleException[]
+
+    @OneToMany(()=> Consultation, (consultation)=> consultation.scheduleConsultant)
+    consultation: Consultation[]
 }
 
 export class ScheduleAvailabilityDto {
