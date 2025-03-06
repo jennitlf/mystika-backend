@@ -3,6 +3,7 @@ import { ScheduleConsultantService } from './schedule-consultant.service';
 import { CreateScheduleConsultantDto } from 'src/shared/dtos/create-schedule-consultant.dto';
 import { ApiBearerAuth, ApiQuery } from '@nestjs/swagger';
 import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
+import { CreateScheduleRecurringDto } from 'src/shared/dtos/create-schedule-recurring.dto';
 
 @ApiBearerAuth()
 @Controller('schedule-consultant')
@@ -22,6 +23,11 @@ export class ScheduleConsultantController {
     @Post()
     create (@Body() createScheduleConsultantDto: CreateScheduleConsultantDto){
         return this.scheduleConsultantService.create(createScheduleConsultantDto)
+    }
+    @Post('recurring')
+    @UseGuards(JwtAuthGuard)
+    async createRecurring(@Body() createRecurringScheduleDto: CreateScheduleRecurringDto) {
+    return this.scheduleConsultantService.createRecurring(createRecurringScheduleDto);
     }
 
     @UseGuards(JwtAuthGuard)

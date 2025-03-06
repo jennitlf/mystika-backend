@@ -66,7 +66,7 @@ export class ScheduleConsultantService {
       const schDt = this.dateUtilsService.getZonedDate(new Date(schedule.date + 'T00:00:00'));
       return schDt >= now || schDt.toDateString() === now.toDateString();
     });
-    console.log("Agendas válidas", validSchedules);
+    
   
     const timeslots = await Promise.all(
       validSchedules.map(async (schedule) => {
@@ -109,13 +109,12 @@ export class ScheduleConsultantService {
         const bookedTimes = consultations.map((consultation) =>
           consultation.appoinment_time.slice(0, 5)
         );
-        console.log(`Booked times for schedule ID ${id} on ${scheduleDateISO}:`, bookedTimes);
+        
   
         
         const availableTimesAfterBooking = filteredTimes.filter(
           (time) => !bookedTimes.includes(time)
         );
-        console.log(`Available times after booking for schedule ID ${id}:`, availableTimesAfterBooking);
   
         return {
           schedule_id: id,
@@ -128,7 +127,53 @@ export class ScheduleConsultantService {
     return timeslots;
   }
   
+  async createRecurring(createRecurringScheduleDto: any) {
+    const { id_consultant_specialty, start_date, end_date, days_of_week, hour_initial, hour_end, status } = createRecurringScheduleDto;
+  
+    const startDate = this.dateUtilsService.getZonedDate(new Date(start_date));
+    const endDate = this.dateUtilsService.getZonedDate(new Date(end_date));
 
+    const diffInMs = endDate.getTime() - startDate.getTime();
+    const diffInDays = diffInMs / (1000 * 60 * 60 * 24);
+    if (diffInDays > 90) {
+      throw new HttpException(
+        'O intervalo máximo permitido é de 3 meses (aproximadamente 90 dias).',
+       HttpStatus.BAD_REQUEST,
+      );
+    }
+    const schedules = [];
+  
+    for (
+      let date = new Date(startDate);
+      date <= endDate;
+      date.setDate(date.getDate() + 1)
+    ) {
+      if (days_of_week.includes(date.getDay())) {
+        const scheduleDate = this.dateUtilsService.getZonedDate(new Date(date.toISOString().split('T')[0] + 'T00:00:00'));
+        const scheduleExists = await this.scheduleConsultantRepository.findOne({
+          where: { id_consultant_specialty, date: scheduleDate, hour_initial, hour_end },
+        });
+  
+        if (!scheduleExists) {
+          schedules.push(
+            this.scheduleConsultantRepository.create({
+              id_consultant_specialty,
+              date: date.toISOString().split('T')[0],
+              hour_initial,
+              hour_end,
+              status,
+            })
+          );
+        }
+      }
+    }
+  
+    if (schedules.length > 0) {
+      return this.scheduleConsultantRepository.save(schedules);
+    }
+  
+    throw new HttpException('No new schedules were created; all dates already exist.', HttpStatus.CONFLICT);
+  }
 
 
 async create (createScheduleConsultant: any) {  
