@@ -1,6 +1,6 @@
 import { Controller, Get, Post, Body, Put, Param, Delete, UseGuards } from '@nestjs/common';
 import { UserService } from './user.service';
-import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiQuery, ApiTags } from '@nestjs/swagger';
 import { CreateCustomerDto } from 'src/shared/dtos/create-customer.dto';
 import { UpdateCostumerDto } from 'src/shared/dtos/update-customer.dto';
 import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
@@ -27,10 +27,10 @@ export class UserController {
     return this.userService.findByEmail(email);
   }
 
-  // @Get(':id')
-  // findOne(@Param('id') id: string) {
-  //   return this.userService.findOne(id);
-  // }
+  @Get('id/:id')
+  findOne(@Param('id') id: string) {
+    return this.userService.findOne(id);
+  }
 
   @Put(':id')
   @UseGuards(JwtAuthGuard)
