@@ -43,8 +43,8 @@ export class GeneralFindService {
   
     const query = this.consultantRepository
       .createQueryBuilder('consultant')
-      .leftJoinAndSelect('consultant.consultantSpecialties', 'consultantSpecialty')
-      .leftJoinAndSelect('consultantSpecialty.specialty', 'specialty')
+      .innerJoinAndSelect('consultant.consultantSpecialties', 'consultantSpecialty')
+      .innerJoinAndSelect('consultantSpecialty.specialty', 'specialty')
       .select([
         'consultant.id as consultant_id',
         'consultant.name as consultant_name',
