@@ -84,7 +84,7 @@ export class ScheduleConsultantService {
             this.dateUtilsService.getZonedDate(new Date(date + 'T00:00:00')).toISOString().split('T')[0]
         );
         const unavailableTimes = relevantExceptions.map((ex) =>
-          this.formatTime(this.parseTime(ex.unavaiable_time))
+          this.formatTime(this.parseTime(ex.unavailable_time))
         );
         const availableTimes = allTimes.filter((time) => !unavailableTimes.includes(time));
   
