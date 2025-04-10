@@ -17,7 +17,7 @@ export class ScheduleException{
     day_week: number;
 
     @Column()
-    unavaiable_time: string;
+    unavailable_time: string;
 
     @Column()
     reason: string;

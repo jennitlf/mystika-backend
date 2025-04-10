@@ -16,7 +16,7 @@ export default class CreateScheduleExceptionDto {
 
     @IsNotEmpty()
     @IsString()
-    readonly unavaiable_time: string;
+    readonly unavailable_time: string;
 
     @IsNotEmpty()
     @IsString()
