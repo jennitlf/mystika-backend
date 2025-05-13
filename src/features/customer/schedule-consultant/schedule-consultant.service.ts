@@ -3,7 +3,7 @@ import { Brackets, Raw, Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
 import { ScheduleConsultant, ScheduleAvailabilityDto } from 'src/shared/entities/schedule_consultant.entity';
 import { ScheduleException } from 'src/shared/entities/schedule_exception.entity';
-import { DateUtilsService } from '../shared/utils/date.utils';
+import { DateUtilsService } from '../../../shared/utils/date.utils';
 import { Consultation } from 'src/shared/entities/consultation.entity';
 import { query } from 'express';
 

@@ -1,17 +1,17 @@
 import { Module } from '@nestjs/common';
 import { AppService } from './app.service';
-import { ConsultantModule } from './consultant/consultant.module';
+import { ConsultantModule } from './features/customer/consultant/consultant.module';
 import { DatabaseModule } from './database/database.module';
 import { ConfigModule } from '@nestjs/config';
-import { SpecialtyModule } from './specialty/specialty.module';
-import { ConsultantSpecialtyModule } from './consultant-specialty/consultant-specialty.module';
+import { SpecialtyModule } from './features/customer/specialty/specialty.module';
+import { ConsultantSpecialtyModule } from './features/customer/consultant-specialty/consultant-specialty.module';
 import { AppController } from './app.controller';
-import { GeneralFindModule } from './general-find/general-find.module';
-import { UserModule } from './user/user.module';
+import { GeneralFindModule } from './features/customer/general-find/general-find.module';
+import { UserModule } from './features/customer/user/user.module';
 import { AuthModule } from './auth/auth.module';
-import { ScheduleConsultantModule } from './schedule-consultant/schedule-consultant.module';
-import { ScheduleExceptionModule } from './schedule-exception/schedule-exception.module';
-import { ConsultationModule } from './consultation/consultation.module';
+import { ScheduleConsultantModule } from './features/customer/schedule-consultant/schedule-consultant.module';
+import { ScheduleExceptionModule } from './features/customer/schedule-exception/schedule-exception.module';
+import { ConsultationModule } from './features/customer/consultation/consultation.module';
 
 
 @Module({
