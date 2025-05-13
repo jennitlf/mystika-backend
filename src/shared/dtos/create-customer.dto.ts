@@ -1,4 +1,4 @@
-import { IsString, IsEmail, IsNotEmpty } from "class-validator";
+import { IsString, IsNotEmpty } from "class-validator";
 
 export class CreateCustomerDto{
 
@@ -21,4 +21,8 @@ export class CreateCustomerDto{
     @IsNotEmpty()
     @IsString()
     readonly status: string
+
+    @IsNotEmpty()
+    @IsString()
+    readonly role: string
 }

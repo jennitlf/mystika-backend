@@ -49,4 +49,8 @@ export class CreateConsultantDto {
     @IsNotEmpty()
     @IsString()
     readonly payment_plan: string
+
+    @IsNotEmpty()
+    @IsString()
+    readonly role: string
 }
