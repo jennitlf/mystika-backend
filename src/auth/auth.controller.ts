@@ -9,7 +9,7 @@ import { ApiBody } from '@nestjs/swagger';
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
-  @Post('register')
+  @Post('customer/register')
   @ApiBody({
     description: 'Criação de usuário',
     schema: {
@@ -28,7 +28,7 @@ export class AuthController {
     return this.authService.register(body);
   }
 
-  @Post('login')
+  @Post('customer/login')
   @ApiBody({
     description: 'Credenciais para login',
     schema: {
