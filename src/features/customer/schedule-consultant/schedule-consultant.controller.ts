@@ -2,7 +2,7 @@ import { Controller, Get, Post, Body, Put, Param, Delete, Query, UseGuards } fro
 import { ScheduleConsultantService } from './schedule-consultant.service';
 import { CreateScheduleConsultantDto } from 'src/shared/dtos/create-schedule-consultant.dto';
 import { ApiBearerAuth, ApiQuery } from '@nestjs/swagger';
-import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
+import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
 import { CreateScheduleRecurringDto } from 'src/shared/dtos/create-schedule-recurring.dto';
 
 @ApiBearerAuth()

@@ -2,7 +2,7 @@ import { Controller, Get, Post, Body, Patch, Param, Delete, Query, UseGuards } f
 import { ScheduleExceptionService } from './schedule-exception.service';
 import CreateScheduleExceptionDto from 'src/shared/dtos/create-schedule-exception.dto';
 import { ApiBearerAuth, ApiQuery } from '@nestjs/swagger';
-import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
+import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
 
 @ApiBearerAuth()
 @Controller('schedule-exception')

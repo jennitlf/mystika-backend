@@ -3,7 +3,7 @@ import { ConsultationService } from './consultation.service';
 import { CreateConsultationDto } from 'src/shared/dtos/create-consultation.dto';
 import { UpdateConsultationDto } from 'src/shared/dtos/update-consultation.dto';
 import { ApiBearerAuth, ApiQuery } from '@nestjs/swagger';
-import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
+import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
 
 @ApiBearerAuth()
 @UseGuards(JwtAuthGuard)
