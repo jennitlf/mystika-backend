@@ -1,4 +1,10 @@
-import { IsString, IsNumber, IsNotEmpty, IsISO8601, IsArray } from 'class-validator';
+import {
+  IsString,
+  IsNumber,
+  IsNotEmpty,
+  IsISO8601,
+  IsArray,
+} from 'class-validator';
 
 export class CreateScheduleRecurringDto {
   @IsNotEmpty()

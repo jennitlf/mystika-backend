@@ -7,7 +7,9 @@ import { Specialty } from 'src/shared/entities/specialty.entity';
 import { ConsultantSpecialty } from 'src/shared/entities/consultant_specialty.entity';
 
 @Module({
-  imports:[ TypeOrmModule.forFeature([Consultant, Specialty, ConsultantSpecialty])],
+  imports: [
+    TypeOrmModule.forFeature([Consultant, Specialty, ConsultantSpecialty]),
+  ],
   controllers: [ConsultantController],
   providers: [ConsultantService],
 })

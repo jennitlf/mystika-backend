@@ -8,7 +8,6 @@ import { Customer } from 'src/shared/entities/customer.entity';
 import { UserModule } from 'src/features/customer/user/user.module';
 import { JwtStrategy } from './jwt-strategy';
 
-
 @Module({
   imports: [
     TypeOrmModule.forFeature([Customer]),
@@ -16,7 +15,7 @@ import { JwtStrategy } from './jwt-strategy';
       imports: [ConfigModule], 
       inject: [ConfigService], 
       useFactory: async (configService: ConfigService) => ({
-        secret: configService.get<string>('JWT_SECRET'), 
+        secret: configService.get<string>('JWT_SECRET'),
         signOptions: { expiresIn: '1h' },
       }),
     }),
@@ -24,7 +23,5 @@ import { JwtStrategy } from './jwt-strategy';
   ],
   controllers: [AuthController],
   providers: [AuthService, JwtStrategy],
-  
-
 })
 export class AuthModule {}

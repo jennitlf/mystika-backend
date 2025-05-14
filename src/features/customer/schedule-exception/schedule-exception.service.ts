@@ -6,37 +6,45 @@ import { Repository } from 'typeorm';
 
 @Injectable()
 export class ScheduleExceptionService {
-
   constructor(
     @InjectRepository(ScheduleException)
     private readonly scheduleExceptionRepository: Repository<ScheduleException>,
 
     @InjectRepository(ScheduleConsultant)
-    private readonly scheduleConsultantRepository: Repository<ScheduleConsultant>
-  ){}
+    private readonly scheduleConsultantRepository: Repository<ScheduleConsultant>,
+  ) {}
 
   async create(createScheduleExceptionDto: any) {
-    const scheduleConsultantValid = await this.scheduleConsultantRepository.findOne({
-      where:{id: +createScheduleExceptionDto.id_schedule_consultant}
-    })
-    if(!scheduleConsultantValid){
-      throw new NotFoundException(`schedule consultant id: ${createScheduleExceptionDto.id_schedule_consultant} not found, enter a valid id`)
+    const scheduleConsultantValid =
+      await this.scheduleConsultantRepository.findOne({
+        where: { id: +createScheduleExceptionDto.id_schedule_consultant },
+      });
+    if (!scheduleConsultantValid) {
+      throw new NotFoundException(
+        `schedule consultant id: ${createScheduleExceptionDto.id_schedule_consultant} not found, enter a valid id`,
+      );
     }
-    const schedule_exception = this.scheduleExceptionRepository.create(createScheduleExceptionDto)
+    const schedule_exception = this.scheduleExceptionRepository.create(
+      createScheduleExceptionDto,
+    );
     return this.scheduleExceptionRepository.save(schedule_exception);
   }
 
-  async findAll(
-    filters: { idScheduleConsultant?: number }
-  ) {
+  async findAll(filters: { idScheduleConsultant?: number }) {
     const { idScheduleConsultant } = filters;
 
-    const query = this.scheduleExceptionRepository.createQueryBuilder('scheduleException')
-    .innerJoinAndSelect('scheduleException.scheduleConsultant', 'scheduleConsultant');
+    const query = this.scheduleExceptionRepository
+      .createQueryBuilder('scheduleException')
+      .innerJoinAndSelect(
+        'scheduleException.scheduleConsultant',
+        'scheduleConsultant',
+      );
 
-    if(idScheduleConsultant) query.andWhere('scheduleConsultant.id = :idScheduleConsultant', { idScheduleConsultant })
+    if (idScheduleConsultant)
+      query.andWhere('scheduleConsultant.id = :idScheduleConsultant', {
+        idScheduleConsultant,
+      });
 
-    
     return query.getMany();
   }
 

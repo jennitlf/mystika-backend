@@ -1,4 +1,13 @@
-import { Controller, Get, Post, Body, Put, Param, Delete, UseGuards } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Put,
+  Param,
+  Delete,
+  UseGuards,
+} from '@nestjs/common';
 import { UserService } from './user.service';
 import { ApiBearerAuth, ApiQuery, ApiTags } from '@nestjs/swagger';
 import { CreateCustomerDto } from 'src/shared/dtos/create-customer.dto';
@@ -6,7 +15,6 @@ import { UpdateCostumerDto } from 'src/shared/dtos/update-customer.dto';
 import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
 import { OwnershipGuard } from 'src/auth/guards/ownership.guard';
 import { createRoleGuard } from 'src/auth/factories/role-guard.factory';
-
 
 @ApiTags('Customer')
 @ApiBearerAuth()
@@ -31,19 +39,34 @@ export class UserController {
   }
 
   @Get('id/:id')
-  @UseGuards(JwtAuthGuard, createRoleGuard(['administrador', 'user']), OwnershipGuard)
+  @UseGuards(
+    JwtAuthGuard,
+    createRoleGuard(['administrador', 'user']),
+    OwnershipGuard,
+  )
   findOne(@Param('id') id: string) {
     return this.userService.findOne(id);
   }
 
   @Put(':id')
-  @UseGuards(JwtAuthGuard, createRoleGuard(['administrador', 'user']), OwnershipGuard)
-  update(@Param('id') id: string, @Body() updateCostumerDto: UpdateCostumerDto) {
+  @UseGuards(
+    JwtAuthGuard,
+    createRoleGuard(['administrador', 'user']),
+    OwnershipGuard,
+  )
+  update(
+    @Param('id') id: string,
+    @Body() updateCostumerDto: UpdateCostumerDto,
+  ) {
     return this.userService.update(+id, updateCostumerDto);
   }
 
   @Delete(':id')
-  @UseGuards(JwtAuthGuard, createRoleGuard(['administrador', 'user']), OwnershipGuard)
+  @UseGuards(
+    JwtAuthGuard,
+    createRoleGuard(['administrador', 'user']),
+    OwnershipGuard,
+  )
   remove(@Param('id') id: string) {
     return this.userService.remove(id);
   }

@@ -8,7 +8,13 @@ import { DateUtilsService } from 'src/shared/utils/date.utils';
 import { Consultation } from 'src/shared/entities/consultation.entity';
 
 @Module({
-  imports: [ TypeOrmModule.forFeature([ScheduleConsultant, ScheduleException, Consultation])],
+  imports: [
+    TypeOrmModule.forFeature([
+      ScheduleConsultant,
+      ScheduleException,
+      Consultation,
+    ]),
+  ],
   controllers: [ScheduleConsultantController],
   providers: [ScheduleConsultantService, DateUtilsService],
 })

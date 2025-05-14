@@ -1,6 +1,6 @@
-import { PartialType } from "@nestjs/mapped-types";
-import { CreateScheduleConsultantDto } from "./create-schedule-consultant.dto";
+import { PartialType } from '@nestjs/mapped-types';
+import { CreateScheduleConsultantDto } from './create-schedule-consultant.dto';
 
-export class UpdateScheduleConsultantDto extends PartialType(CreateScheduleConsultantDto){
-
-};
+export class UpdateScheduleConsultantDto extends PartialType(
+  CreateScheduleConsultantDto,
+) {}

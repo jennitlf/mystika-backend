@@ -3,12 +3,15 @@ import { ConsultantSpecialty } from './consultant_specialty.entity';
 
 @Entity('specialty')
 export class Specialty {
-    @PrimaryGeneratedColumn()
-    id: number;
+  @PrimaryGeneratedColumn()
+  id: number;
 
-    @Column({ name: 'name_specialty', nullable: false, unique: true })
-    name_specialty: string;
+  @Column({ name: 'name_specialty', nullable: false, unique: true })
+  name_specialty: string;
 
-    @OneToMany(() => ConsultantSpecialty, (consultantSpecialty) => consultantSpecialty.specialty)
-    consultantSpecialties: ConsultantSpecialty[]; 
+  @OneToMany(
+    () => ConsultantSpecialty,
+    (consultantSpecialty) => consultantSpecialty.specialty,
+  )
+  consultantSpecialties: ConsultantSpecialty[];
 }

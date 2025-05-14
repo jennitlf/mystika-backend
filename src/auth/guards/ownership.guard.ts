@@ -1,4 +1,9 @@
-import { Injectable, CanActivate, ExecutionContext, ForbiddenException } from '@nestjs/common';
+import {
+  Injectable,
+  CanActivate,
+  ExecutionContext,
+  ForbiddenException,
+} from '@nestjs/common';
 
 @Injectable()
 export class OwnershipGuard implements CanActivate {
@@ -8,7 +13,9 @@ export class OwnershipGuard implements CanActivate {
     const userIdFromRoute = request.params.id;
 
     if (user.role !== 'admin' && user.id !== userIdFromRoute) {
-      throw new ForbiddenException('Acesso negado: Você só pode acessar os seus próprios dados.');
+      throw new ForbiddenException(
+        'Acesso negado: Você só pode acessar os seus próprios dados.',
+      );
     }
     return true;
   }

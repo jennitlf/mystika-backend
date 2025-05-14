@@ -13,7 +13,9 @@ async function bootstrap() {
 
   const config = new DocumentBuilder()
     .setTitle('Mystika')
-    .setDescription('Esta documentação visa esclarecer as funcionalidades do site Mystika')
+    .setDescription(
+      'Esta documentação visa esclarecer as funcionalidades do site Mystika',
+    )
     .setVersion('1.0')
     .addBearerAuth()
     // .addTag('APIs')
@@ -21,7 +23,7 @@ async function bootstrap() {
 
   app.useGlobalPipes(new ValidationPipe());
   const documentFactory = () => SwaggerModule.createDocument(app, config);
-  SwaggerModule.setup('api', app, documentFactory)
+  SwaggerModule.setup('api', app, documentFactory);
 
   await app.listen(3001);
 }

@@ -6,7 +6,7 @@ import { ScheduleException } from 'src/shared/entities/schedule_exception.entity
 import { ScheduleConsultant } from 'src/shared/entities/schedule_consultant.entity';
 
 @Module({
-  imports:[TypeOrmModule.forFeature([ScheduleException, ScheduleConsultant])],
+  imports: [TypeOrmModule.forFeature([ScheduleException, ScheduleConsultant])],
   controllers: [ScheduleExceptionController],
   providers: [ScheduleExceptionService],
 })

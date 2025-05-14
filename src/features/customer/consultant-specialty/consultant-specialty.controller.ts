@@ -1,4 +1,16 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, Query, Put, HttpStatus, HttpCode } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
+  Delete,
+  Query,
+  Put,
+  HttpStatus,
+  HttpCode,
+} from '@nestjs/common';
 import { ConsultantSpecialtyService } from './consultant-specialty.service';
 import { CreateConsultantSpecialtyDto } from 'src/shared/dtos/create-consultant-specialty.dto';
 import { UpdateConsultantSpecialtyDto } from 'src/shared/dtos/update-consultant-specialty.dto';
@@ -7,7 +19,9 @@ import { ApiQuery, ApiTags } from '@nestjs/swagger';
 @ApiTags('consultant data in each specialty')
 @Controller('consultant-specialty')
 export class ConsultantSpecialtyController {
-  constructor(private readonly consultantSpecialtyService: ConsultantSpecialtyService) {}
+  constructor(
+    private readonly consultantSpecialtyService: ConsultantSpecialtyService,
+  ) {}
 
   @Post()
   create(@Body() createConsultantSpecialtyDto: CreateConsultantSpecialtyDto) {
@@ -15,9 +29,24 @@ export class ConsultantSpecialtyController {
   }
 
   @Get()
-  @ApiQuery({ name: 'consultantName', required: false, type: String, example: 'John' })
-  @ApiQuery({ name: 'idConsultant', required: false, type: Number, example: '1' })
-  @ApiQuery({ name: 'specialty', required: false, type: String, example: 'Tarot' })
+  @ApiQuery({
+    name: 'consultantName',
+    required: false,
+    type: String,
+    example: 'John',
+  })
+  @ApiQuery({
+    name: 'idConsultant',
+    required: false,
+    type: Number,
+    example: '1',
+  })
+  @ApiQuery({
+    name: 'specialty',
+    required: false,
+    type: String,
+    example: 'Tarot',
+  })
   @ApiQuery({ name: 'minPrice', required: false, type: Number, example: 50 })
   @ApiQuery({ name: 'maxPrice', required: false, type: Number, example: 200 })
   @ApiQuery({ name: 'page', required: false, type: Number, example: 1 })
@@ -44,8 +73,14 @@ export class ConsultantSpecialtyController {
   }
 
   @Put(':id')
-  update(@Param('id') id: string, @Body() updateConsultantSpecialtyDto: UpdateConsultantSpecialtyDto) {
-    return this.consultantSpecialtyService.update(id, updateConsultantSpecialtyDto);
+  update(
+    @Param('id') id: string,
+    @Body() updateConsultantSpecialtyDto: UpdateConsultantSpecialtyDto,
+  ) {
+    return this.consultantSpecialtyService.update(
+      id,
+      updateConsultantSpecialtyDto,
+    );
   }
 
   @HttpCode(HttpStatus.NO_CONTENT)

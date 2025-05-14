@@ -13,17 +13,22 @@ import { ScheduleConsultantModule } from './features/customer/schedule-consultan
 import { ScheduleExceptionModule } from './features/customer/schedule-exception/schedule-exception.module';
 import { ConsultationModule } from './features/customer/consultation/consultation.module';
 
-
 @Module({
   imports: [
     ConfigModule.forRoot({
-      isGlobal:true,
+      isGlobal: true,
     }),
-    AuthModule, 
+    AuthModule,
     DatabaseModule,
-    ConsultantModule, 
-    SpecialtyModule, 
-    ConsultantSpecialtyModule, GeneralFindModule, UserModule, AuthModule, ScheduleConsultantModule, ScheduleExceptionModule, ConsultationModule
+    ConsultantModule,
+    SpecialtyModule,
+    ConsultantSpecialtyModule,
+    GeneralFindModule,
+    UserModule,
+    AuthModule,
+    ScheduleConsultantModule,
+    ScheduleExceptionModule,
+    ConsultationModule,
   ],
   controllers: [AppController],
   providers: [AppService],

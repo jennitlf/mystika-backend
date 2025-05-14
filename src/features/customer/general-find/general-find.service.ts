@@ -5,11 +5,8 @@ import { Consultant } from 'src/shared/entities/consultant.entity';
 import { Specialty } from 'src/shared/entities/specialty.entity';
 import { ConsultantSpecialty } from 'src/shared/entities/consultant_specialty.entity';
 
-
-
 @Injectable()
 export class GeneralFindService {
-
   constructor(
     @InjectRepository(Consultant)
     private readonly consultantRepository: Repository<Consultant>,
@@ -18,17 +15,15 @@ export class GeneralFindService {
     private readonly specialtyRepository: Repository<Specialty>,
 
     @InjectRepository(ConsultantSpecialty)
-    private readonly ConsultantSpecialtyRepository: Repository<ConsultantSpecialty>
-
+    private readonly ConsultantSpecialtyRepository: Repository<ConsultantSpecialty>,
   ) {}
 
-
   async generalConsultantData(
-    page: number = 1, 
-    limit: number = 6, 
+    page: number = 1,
+    limit: number = 6,
     name?: string,
-    specialties?: string[], 
-    minValue?: number, 
+    specialties?: string[],
+    minValue?: number,
     maxValue?: number,
   ) {
     page = isNaN(page) ? 1 : page;
@@ -38,12 +33,15 @@ export class GeneralFindService {
     if (specialties && !Array.isArray(specialties)) {
       specialties = [specialties];
     }
-  
+
     const skip = (page - 1) * limit;
-  
+
     const query = this.consultantRepository
       .createQueryBuilder('consultant')
-      .innerJoinAndSelect('consultant.consultantSpecialties', 'consultantSpecialty')
+      .innerJoinAndSelect(
+        'consultant.consultantSpecialties',
+        'consultantSpecialty',
+      )
       .innerJoinAndSelect('consultantSpecialty.specialty', 'specialty')
       .select([
         'consultant.id as consultant_id',
@@ -57,35 +55,43 @@ export class GeneralFindService {
         'specialty.name_specialty as specialty_name',
       ])
       .where('consultant.status = :status', { status: 'ativo' });
-  
+
     // Filtro por nome
     if (name) {
-      query.andWhere('LOWER(consultant.name) LIKE :name', { name: `%${name.toLowerCase()}%` });
+      query.andWhere('LOWER(consultant.name) LIKE :name', {
+        name: `%${name.toLowerCase()}%`,
+      });
     }
-  
+
     // Filtro por valor mínimo
     if (minValue !== undefined) {
-      query.andWhere('consultantSpecialty.value_per_duration >= :minValue', { minValue });
+      query.andWhere('consultantSpecialty.value_per_duration >= :minValue', {
+        minValue,
+      });
     }
-  
+
     // Filtro por valor máximo
     if (maxValue !== undefined) {
-      query.andWhere('consultantSpecialty.value_per_duration <= :maxValue', { maxValue });
+      query.andWhere('consultantSpecialty.value_per_duration <= :maxValue', {
+        maxValue,
+      });
     }
-  
+
     // Filtro por especialidades
     if (specialties && specialties.length > 0) {
       if (!Array.isArray(specialties)) {
         throw new Error('The "specialties" parameter must be an array.');
       }
-      query.andWhere('specialty.name_specialty IN (:...specialties)', { specialties });
+      query.andWhere('specialty.name_specialty IN (:...specialties)', {
+        specialties,
+      });
     }
-  
+
     const consultants = await query.getRawMany();
-  
+
     const groupedConsultants = consultants.reduce((acc, item) => {
       let consultant = acc.find((c) => c.consultant_id === item.consultant_id);
-  
+
       if (!consultant) {
         consultant = {
           consultant_id: item.consultant_id,
@@ -97,19 +103,19 @@ export class GeneralFindService {
         };
         acc.push(consultant);
       }
-  
+
       consultant.specialties.push({
         id: item.id,
         name: item.specialty_name,
         duration: item.duration,
         value_per_duration: item.value_per_duration,
       });
-  
+
       return acc;
     }, []);
-  
+
     const paginatedData = groupedConsultants.slice(skip, skip + limit);
-  
+
     return {
       data: paginatedData,
       meta: {
@@ -119,9 +125,7 @@ export class GeneralFindService {
       },
     };
   }
-  
 }
-function where(arg0: string, arg1: { status: string; }) {
+function where(arg0: string, arg1: { status: string }) {
   throw new Error('Function not implemented.');
 }
-

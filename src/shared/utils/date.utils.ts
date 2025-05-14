@@ -7,7 +7,10 @@ export class DateUtilsService {
   constructor(private readonly configService: ConfigService) {}
 
   getZonedDate(date: Date = new Date()): Date {
-    const timeZone = this.configService.get<string>('TIMEZONE', 'America/Sao_Paulo');
+    const timeZone = this.configService.get<string>(
+      'TIMEZONE',
+      'America/Sao_Paulo',
+    );
     return toZonedTime(date, timeZone);
   }
 }

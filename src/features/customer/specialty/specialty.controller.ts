@@ -1,9 +1,19 @@
-import { Controller, Get, Post, Body, Param, Delete, Query, Put, HttpCode, HttpStatus } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Param,
+  Delete,
+  Query,
+  Put,
+  HttpCode,
+  HttpStatus,
+} from '@nestjs/common';
 import { SpecialtyService } from './specialty.service';
 import { CreateSpecialtyDto } from 'src/shared/dtos/create-specialty.dto';
 import { UpdateSpecialtyDto } from 'src/shared/dtos/update-specialty.dto';
 import { ApiQuery, ApiTags } from '@nestjs/swagger';
-
 
 @ApiTags('specialty')
 @Controller('specialty')
@@ -26,7 +36,10 @@ export class SpecialtyController {
   }
 
   @Put(':id')
-  update(@Param('id') id: string, @Body() updateSpecialtyDto: UpdateSpecialtyDto) {
+  update(
+    @Param('id') id: string,
+    @Body() updateSpecialtyDto: UpdateSpecialtyDto,
+  ) {
     return this.specialtyService.update(id, updateSpecialtyDto);
   }
 

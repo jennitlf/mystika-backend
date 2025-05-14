@@ -1,29 +1,36 @@
-import { PrimaryGeneratedColumn, Column, Entity, ManyToOne, JoinColumn } from "typeorm";
-import { ScheduleConsultant } from "./schedule_consultant.entity";
+import {
+  PrimaryGeneratedColumn,
+  Column,
+  Entity,
+  ManyToOne,
+  JoinColumn,
+} from 'typeorm';
+import { ScheduleConsultant } from './schedule_consultant.entity';
 
 @Entity('schedule_exception')
-export class ScheduleException{
+export class ScheduleException {
+  @PrimaryGeneratedColumn()
+  id: number;
 
-    @PrimaryGeneratedColumn()
-    id: number;
+  @Column()
+  id_schedule_consultant: number;
 
-    @Column()
-    id_schedule_consultant: number;
+  @Column()
+  date_exception: Date;
 
-    @Column()
-    date_exception: Date;
+  @Column()
+  day_week: number;
 
-    @Column()
-    day_week: number;
+  @Column()
+  unavailable_time: string;
 
-    @Column()
-    unavailable_time: string;
+  @Column()
+  reason: string;
 
-    @Column()
-    reason: string;
-
-    @ManyToOne(()=>ScheduleConsultant, (scheduleConsultant) => scheduleConsultant.scheduleException)
-    @JoinColumn({name: 'id_schedule_consultant'})
-    scheduleConsultant: ScheduleConsultant;
-    
+  @ManyToOne(
+    () => ScheduleConsultant,
+    (scheduleConsultant) => scheduleConsultant.scheduleException,
+  )
+  @JoinColumn({ name: 'id_schedule_consultant' })
+  scheduleConsultant: ScheduleConsultant;
 }

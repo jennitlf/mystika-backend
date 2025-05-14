@@ -4,7 +4,6 @@ import { AuthService } from './auth.service';
 import { CreateCustomerDto } from 'src/shared/dtos/create-customer.dto';
 import { ApiBody } from '@nestjs/swagger';
 
-
 @Controller('auth')
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
@@ -15,11 +14,11 @@ export class AuthController {
     schema: {
       type: 'object',
       properties: {
-        name: { type: 'string', example: 'Brandão Junior'},
-        phone: { type: 'string', example: '99999-9999'},
+        name: { type: 'string', example: 'Brandão Junior' },
+        phone: { type: 'string', example: '99999-9999' },
         email: { type: 'string', example: 'usuario@exemplo.com' },
         password: { type: 'string', example: 'senha123' },
-        status: { type: 'string', example: 'ativo'}
+        status: { type: 'string', example: 'ativo' },
       },
     },
   })

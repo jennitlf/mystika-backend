@@ -1,4 +1,14 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, Query, UseGuards } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
+  Delete,
+  Query,
+  UseGuards,
+} from '@nestjs/common';
 import { ConsultationService } from './consultation.service';
 import { CreateConsultationDto } from 'src/shared/dtos/create-consultation.dto';
 import { UpdateConsultationDto } from 'src/shared/dtos/update-consultation.dto';
@@ -18,9 +28,24 @@ export class ConsultationController {
 
   @Get()
   @ApiQuery({ name: 'idCustomer', required: false, type: Number, example: 1 })
-  @ApiQuery({ name: 'idConsultantSpecialty', required: false, type: Number, example: 10 })
-  @ApiQuery({ name: 'appoinmentDate', required: false, type: String, example: 'AAAA-MM-DD' })
-  @ApiQuery({ name: 'appoinmentTime', required: false, type: String, example: '00:00:00' })
+  @ApiQuery({
+    name: 'idConsultantSpecialty',
+    required: false,
+    type: Number,
+    example: 10,
+  })
+  @ApiQuery({
+    name: 'appoinmentDate',
+    required: false,
+    type: String,
+    example: 'AAAA-MM-DD',
+  })
+  @ApiQuery({
+    name: 'appoinmentTime',
+    required: false,
+    type: String,
+    example: '00:00:00',
+  })
   @ApiQuery({ name: 'page', required: false, type: Number, example: 1 })
   @ApiQuery({ name: 'limit', required: false, type: Number, example: 10 })
   findAll(
@@ -32,7 +57,7 @@ export class ConsultationController {
     @Query('limit') limit: number = 10,
   ) {
     return this.consultationService.findAll(
-      { idCustomer, idConsultantSpecialty, appoinmentDate, appoinmentTime, },
+      { idCustomer, idConsultantSpecialty, appoinmentDate, appoinmentTime },
       page,
       limit,
     );
@@ -43,8 +68,11 @@ export class ConsultationController {
     return this.consultationService.findOne(id);
   }
 
-  @Patch(':id')                                                  
-  update(@Param('id') id: string, @Body() updateConsultationDto: UpdateConsultationDto) {
+  @Patch(':id')
+  update(
+    @Param('id') id: string,
+    @Body() updateConsultationDto: UpdateConsultationDto,
+  ) {
     return this.consultationService.update(id, updateConsultationDto);
   }
 
