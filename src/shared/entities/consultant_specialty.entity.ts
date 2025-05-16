@@ -20,16 +20,16 @@ export class ConsultantSpecialty {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @Column({ name: 'id_consultant', nullable: false })
+  @Column({ name: 'id_consultant', nullable: false, type: 'int' })
   id_consultant: number;
 
-  @Column({ name: 'id_specialty', nullable: false })
+  @Column({ name: 'id_specialty', nullable: false, type: 'int' })
   id_specialty: number;
 
-  @Column({ name: 'duration', nullable: false })
+  @Column({ name: 'duration', nullable: false, type: 'int' })
   duration: number;
 
-  @Column({ name: 'value_per_duration', nullable: false })
+  @Column({ name: 'value_per_duration', nullable: false, type: 'int' })
   value_per_duration: number;
 
   @CreateDateColumn({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
@@ -58,9 +58,5 @@ export class ConsultantSpecialty {
   )
   scheduleConsultant: ScheduleConsultant[];
 
-  @OneToMany(
-    () => Consultation,
-    (consultation) => consultation.consultantSpecialty,
-  )
   consultation: Consultation[];
 }

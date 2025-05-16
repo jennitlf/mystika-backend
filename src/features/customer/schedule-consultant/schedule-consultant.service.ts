@@ -13,7 +13,6 @@ import {
 import { ScheduleException } from 'src/shared/entities/schedule_exception.entity';
 import { DateUtilsService } from '../../../shared/utils/date.utils';
 import { Consultation } from 'src/shared/entities/consultation.entity';
-import { query } from 'express';
 
 @Injectable()
 export class ScheduleConsultantService {
@@ -46,6 +45,7 @@ export class ScheduleConsultantService {
     duration: number,
   ): string[] {
     const times = [];
+    // eslint-disable-next-line prefer-const
     let currentTime = this.parseTime(start);
     const endTime = this.parseTime(end);
     while (currentTime.getTime() + duration * 60000 <= endTime.getTime()) {
