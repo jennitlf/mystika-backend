@@ -12,19 +12,39 @@ export class ScheduleException {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @Column()
+  @Column({
+    name: 'id_schedule_consultant',
+    nullable: false,
+    type: 'int',
+  })
   id_schedule_consultant: number;
 
-  @Column()
+  @Column({
+    name: 'date_exception',
+    type: 'date',
+    nullable: false,
+  })
   date_exception: Date;
 
-  @Column()
+  @Column({
+    name: 'day_week',
+    type: 'int',
+    nullable: false,
+  })
   day_week: number;
 
-  @Column()
+  @Column({
+    name: 'unavailable_time',
+    type: 'time',
+    nullable: false,
+  })
   unavailable_time: string;
 
-  @Column()
+  @Column({
+    name: 'reason',
+    type: 'varchar',
+    length: 45,
+  })
   reason: string;
 
   @ManyToOne(

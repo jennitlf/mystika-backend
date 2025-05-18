@@ -15,6 +15,10 @@ export const AppDataSource = new DataSource({
   database: configService.get('DATABASE_NAME'),
   entities: [__dirname + '/../**/*.entity{.ts,.js}'],
   migrations: [__dirname + '/../shared/migrations/*{.ts,.js}'],
+  // migrations: [
+  //   __dirname +
+  //     '/../shared/migrations/1747453203104-includeAdmSupportAndRoleUsers',
+  // ],
   synchronize: false,
 });
 

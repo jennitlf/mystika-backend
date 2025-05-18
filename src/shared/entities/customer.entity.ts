@@ -7,16 +7,29 @@ import {
   UpdateDateColumn,
 } from 'typeorm';
 import { Consultation } from './consultation.entity';
+import { CustomerSupport } from './customer_support.entity';
 
 @Entity('customer')
 export class Customer {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @Column({ name: 'name', nullable: false, type: 'varchar', length: 60 })
+  @Column({
+    name: 'name',
+    nullable: false,
+    type: 'varchar',
+    length: 60,
+    default: 'NaN',
+  })
   name: string;
 
-  @Column({ name: 'phone', nullable: false, type: 'varchar', length: 15 })
+  @Column({
+    name: 'phone',
+    nullable: false,
+    type: 'varchar',
+    length: 15,
+    default: 'NaN',
+  })
   phone: string;
 
   @Column({
@@ -25,10 +38,17 @@ export class Customer {
     type: 'varchar',
     length: 60,
     unique: true,
+    default: 'NaN',
   })
   email: string;
 
-  @Column({ name: 'password', nullable: false, type: 'varchar', length: 300 })
+  @Column({
+    name: 'password',
+    nullable: false,
+    type: 'varchar',
+    length: 300,
+    default: 'NaN',
+  })
   password: string;
 
   @Column({
@@ -44,7 +64,7 @@ export class Customer {
     name: 'role',
     nullable: false,
     type: 'varchar',
-    length: 25,
+    length: 4,
     default: 'user',
   })
   role: string;
@@ -61,4 +81,10 @@ export class Customer {
 
   @OneToMany(() => Consultation, (consultation) => consultation.customer)
   consultation: Consultation[];
+
+  @OneToMany(
+    () => CustomerSupport,
+    (customerSupport) => customerSupport.customer,
+  )
+  customerSupport: CustomerSupport[];
 }

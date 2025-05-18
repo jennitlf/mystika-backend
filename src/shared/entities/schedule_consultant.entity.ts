@@ -30,7 +30,12 @@ export class ScheduleConsultant {
   @Column({ name: 'hour_end', type: 'time', nullable: false })
   hour_end: string;
 
-  @Column({ name: 'status', type: 'varchar', nullable: false })
+  @Column({
+    name: 'status',
+    type: 'varchar',
+    nullable: false,
+    default: 'disponível',
+  })
   status: string;
 
   @ManyToOne(

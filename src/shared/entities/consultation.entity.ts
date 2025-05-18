@@ -15,22 +15,43 @@ export class Consultation {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @Column({ name: 'id_customer', type: 'int', nullable: false })
+  @Column({
+    name: 'id_customer',
+    type: 'int',
+    nullable: false,
+    default: 0,
+  })
   id_customer: number;
 
-  @Column({ name: 'id_schedule_consultant', type: 'int', nullable: false })
+  @Column({
+    name: 'id_schedule_consultant',
+    type: 'int',
+    nullable: false,
+    default: 0,
+  })
   id_schedule_consultant: number;
 
-  @Column({ name: 'appoinment_date', type: 'time', nullable: false })
+  @Column({
+    name: 'appoinment_date',
+    type: 'date',
+    nullable: false,
+    default: () => `'2025-01-01'`,
+  })
   appoinment_date: Date;
 
-  @Column({ name: 'appoinment_time', type: 'time', nullable: false })
+  @Column({
+    name: 'appoinment_time',
+    type: 'time',
+    nullable: false,
+    default: () => `'12:00:00'`,
+  })
   appoinment_time: string;
 
   @Column({
     name: 'status',
     type: 'varchar',
     nullable: true,
+    length: '15',
     default: 'pending',
   })
   status: string;
@@ -40,7 +61,7 @@ export class Consultation {
     type: 'varchar',
     nullable: true,
     default: 'pending',
-    length: 3,
+    length: 7,
   })
   attended: string;
   @CreateDateColumn()

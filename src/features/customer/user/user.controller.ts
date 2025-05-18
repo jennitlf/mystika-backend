@@ -9,7 +9,7 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { UserService } from './user.service';
-import { ApiBearerAuth, ApiQuery, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { CreateCustomerDto } from 'src/shared/dtos/create-customer.dto';
 import { UpdateCostumerDto } from 'src/shared/dtos/update-customer.dto';
 import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
@@ -28,7 +28,7 @@ export class UserController {
   }
 
   @Get()
-  @UseGuards(JwtAuthGuard, createRoleGuard(['administrador', 'user']))
+  @UseGuards(JwtAuthGuard, createRoleGuard(['adm', 'user']))
   findAll() {
     return this.userService.findAll();
   }
@@ -39,21 +39,13 @@ export class UserController {
   }
 
   @Get('id/:id')
-  @UseGuards(
-    JwtAuthGuard,
-    createRoleGuard(['administrador', 'user']),
-    OwnershipGuard,
-  )
+  @UseGuards(JwtAuthGuard, createRoleGuard(['adm', 'user']), OwnershipGuard)
   findOne(@Param('id') id: string) {
     return this.userService.findOne(id);
   }
 
   @Put(':id')
-  @UseGuards(
-    JwtAuthGuard,
-    createRoleGuard(['administrador', 'user']),
-    OwnershipGuard,
-  )
+  @UseGuards(JwtAuthGuard, createRoleGuard(['adm', 'user']), OwnershipGuard)
   update(
     @Param('id') id: string,
     @Body() updateCostumerDto: UpdateCostumerDto,
@@ -62,11 +54,7 @@ export class UserController {
   }
 
   @Delete(':id')
-  @UseGuards(
-    JwtAuthGuard,
-    createRoleGuard(['administrador', 'user']),
-    OwnershipGuard,
-  )
+  @UseGuards(JwtAuthGuard, createRoleGuard(['adm', 'user']), OwnershipGuard)
   remove(@Param('id') id: string) {
     return this.userService.remove(id);
   }

@@ -7,19 +7,38 @@ import {
   OneToMany,
 } from 'typeorm';
 import { ConsultantSpecialty } from './consultant_specialty.entity';
+import { ConsultantSupport } from './consultant_support.entity';
 
 @Entity('consultant')
 export class Consultant {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @Column({ name: 'name', nullable: false, type: 'varchar', length: 60 })
+  @Column({
+    name: 'name',
+    nullable: false,
+    type: 'varchar',
+    length: 60,
+    default: 'NaN',
+  })
   name: string;
 
-  @Column({ name: 'cpf', nullable: false, type: 'varchar', length: 11 })
+  @Column({
+    name: 'cpf',
+    nullable: false,
+    type: 'varchar',
+    length: 11,
+    default: 'NaN',
+  })
   cpf: string;
 
-  @Column({ name: 'phone', nullable: false, type: 'varchar', length: 15 })
+  @Column({
+    name: 'phone',
+    nullable: false,
+    type: 'varchar',
+    length: 15,
+    default: 'NaN',
+  })
   phone: string;
 
   @Column({
@@ -28,6 +47,7 @@ export class Consultant {
     nullable: false,
     type: 'varchar',
     length: 60,
+    default: 'NaN',
   })
   email: string;
 
@@ -36,6 +56,7 @@ export class Consultant {
     nullable: false,
     type: 'varchar',
     length: 300,
+    default: 'NaN',
   })
   password: string;
 
@@ -44,40 +65,35 @@ export class Consultant {
     nullable: false,
     type: 'varchar',
     length: 800,
+    default: 'NaN',
   })
   profile_data: string;
-
-  @Column({
-    name: 'consultants_story',
-    nullable: false,
-    type: 'varchar',
-    length: 700,
-  })
-  consultants_story: string;
-
-  @Column({
-    name: 'about_specialties',
-    nullable: false,
-    type: 'varchar',
-    length: 700,
-  })
-  about_specialties: string;
 
   @Column({
     name: 'image_consultant',
     nullable: false,
     type: 'varchar',
     length: 300,
+    default: 'NaN',
   })
   image_consultant: string;
 
-  @Column({ name: 'consultations_carried_out', nullable: true, default: 100 })
-  consultations_carried_out: number;
-
-  @Column({ name: 'status', nullable: false, default: 'inativo' })
+  @Column({
+    name: 'status',
+    nullable: false,
+    default: 'inativo',
+    type: 'varchar',
+    length: 15,
+  })
   status: string;
 
-  @Column({ name: 'payment_plan', nullable: false, default: 'mensal' })
+  @Column({
+    name: 'payment_plan',
+    nullable: false,
+    default: 'mensal',
+    type: 'varchar',
+    length: 25,
+  })
   payment_plan: string;
 
   @Column({
@@ -87,6 +103,40 @@ export class Consultant {
     default: false,
   })
   appellant: boolean;
+
+  @Column({
+    name: 'about_specialties',
+    nullable: false,
+    type: 'varchar',
+    length: 700,
+    default: 'NaN',
+  })
+  about_specialties: string;
+
+  @Column({
+    name: 'consultants_story',
+    nullable: false,
+    type: 'varchar',
+    length: 700,
+    default: 'NaN',
+  })
+  consultants_story: string;
+
+  @Column({
+    name: 'consultations_carried_out',
+    nullable: true,
+    default: 100,
+    type: 'int',
+  })
+  consultations_carried_out: number;
+
+  @Column({
+    name: 'role',
+    type: 'varchar',
+    length: 10,
+    default: 'consultant',
+  })
+  role: string;
   @CreateDateColumn({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
   created_at: Date;
 
@@ -102,4 +152,10 @@ export class Consultant {
     (consultantSpecialty) => consultantSpecialty.consultant,
   )
   consultantSpecialties: ConsultantSpecialty[];
+
+  @OneToMany(
+    () => ConsultantSupport,
+    (consultantSupport) => consultantSupport.consultant,
+  )
+  consultantSupport: ConsultantSupport[];
 }
