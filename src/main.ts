@@ -17,8 +17,14 @@ async function bootstrap() {
       'Esta documentação visa esclarecer as funcionalidades do site Mystika',
     )
     .setVersion('1.0')
-    .addBearerAuth()
-    // .addTag('APIs')
+    .addBearerAuth(
+      {
+        type: 'http',
+        scheme: 'bearer',
+        bearerFormat: 'JWT',
+      },
+      'access-token',
+    )
     .build();
 
   app.useGlobalPipes(new ValidationPipe());
