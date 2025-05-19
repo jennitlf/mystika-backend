@@ -23,7 +23,9 @@ export class DecodeTokenMiddleware implements NestMiddleware {
       const decoded = jwt.verify(token, process.env.JWT_SECRET);
       (req as RequestWithUser).user = decoded;
       next();
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (err) {
+      console.error('Erro ao verificar o token:', err.message);
       throw new UnauthorizedException('Token invalido ou expirado');
     }
   }
