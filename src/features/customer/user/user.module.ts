@@ -21,7 +21,7 @@ export class UserModule implements NestModule {
     consumer
       .apply(DecodeTokenMiddleware)
       .forRoutes(
-        { path: 'user/:id', method: RequestMethod.GET },
+        { path: 'user/id/:id', method: RequestMethod.GET },
         { path: 'user', method: RequestMethod.GET },
         { path: 'user/:id', method: RequestMethod.PUT },
         { path: 'user/:id', method: RequestMethod.DELETE },

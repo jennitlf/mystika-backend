@@ -46,12 +46,10 @@ export class CustomerSupportController {
   @UseGuards(createRoleGuard(['user']), ValidateUserGuard)
   findAllByUser(@Request() req) {
     const userId = req.user.id;
-    console.log('---------', userId);
     return this.customerSupportService.findAllByUserId(userId);
   }
 
   @UseGuards(
-    JwtAuthGuard,
     createRoleGuard(['adm', 'user']),
     OwnershipOrAdminGuard,
   )
@@ -61,7 +59,6 @@ export class CustomerSupportController {
   }
 
   @UseGuards(
-    JwtAuthGuard,
     createRoleGuard(['adm', 'user']),
     OwnershipOrAdminGuard,
   )
@@ -74,7 +71,6 @@ export class CustomerSupportController {
   }
 
   @UseGuards(
-    JwtAuthGuard,
     createRoleGuard(['adm', 'user']),
     OwnershipOrAdminGuard,
   )

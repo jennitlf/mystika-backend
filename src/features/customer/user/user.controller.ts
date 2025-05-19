@@ -39,13 +39,13 @@ export class UserController {
   }
 
   @Get('id/:id')
-  @UseGuards(JwtAuthGuard, createRoleGuard(['adm', 'user']), OwnershipGuard)
+  @UseGuards(createRoleGuard(['adm', 'user']), OwnershipGuard)
   findOne(@Param('id') id: string) {
     return this.userService.findOne(id);
   }
 
   @Put(':id')
-  @UseGuards(JwtAuthGuard, createRoleGuard(['adm', 'user']), OwnershipGuard)
+  @UseGuards(createRoleGuard(['adm', 'user']), OwnershipGuard)
   update(
     @Param('id') id: string,
     @Body() updateCostumerDto: UpdateCostumerDto,
@@ -54,7 +54,7 @@ export class UserController {
   }
 
   @Delete(':id')
-  @UseGuards(JwtAuthGuard, createRoleGuard(['adm', 'user']), OwnershipGuard)
+  @UseGuards(createRoleGuard(['adm', 'user']), OwnershipGuard)
   remove(@Param('id') id: string) {
     return this.userService.remove(id);
   }
