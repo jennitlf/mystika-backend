@@ -35,14 +35,14 @@ export class UserService {
   }
 
   async findByEmail(email: string) {
-    const costumer = await this.customerRepository.findOne({
+    const customer = await this.customerRepository.findOne({
       where: { email: email },
     });
-    if (!costumer) {
+    if (!customer) {
       throw new NotFoundException(`Costumer not found`);
     }
 
-    return costumer;
+    return customer;
   }
 
   async findOne(id: string) {
@@ -50,26 +50,26 @@ export class UserService {
       where: { id: +id },
     });
     if (!customer) {
-      throw new NotFoundException(`Costumer not found`);
+      throw new NotFoundException(`Customer not found`);
     }
     return customer;
   }
 
   async update(id: number, updateUserDto: any) {
-    const costumer = await this.customerRepository.preload({
+    const customer = await this.customerRepository.preload({
       ...updateUserDto,
       id: +id,
     });
-    return this.customerRepository.save(costumer);
+    return this.customerRepository.save(customer);
   }
 
   async remove(id: string) {
-    const costumer = await this.customerRepository.findOne({
+    const customer = await this.customerRepository.findOne({
       where: { id: +id },
     });
-    if (!costumer) {
-      throw new NotFoundException(`Costumer ID: ${id} not found`);
+    if (!customer) {
+      throw new NotFoundException(`Customer ID: ${id} not found`);
     }
-    return this.customerRepository.remove(costumer);
+    return this.customerRepository.remove(customer);
   }
 }
