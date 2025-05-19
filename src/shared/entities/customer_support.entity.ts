@@ -55,7 +55,6 @@ export class CustomerSupport {
   @Column({
     name: 'status',
     type: 'varchar',
-    nullable: false,
     length: 30,
     default: 'pending',
   })
@@ -64,8 +63,7 @@ export class CustomerSupport {
   @Column({
     name: 'admResponsible',
     type: 'int',
-    nullable: false,
-    default: 0,
+    default: 1,
   })
   admResponsible: Adm;
 
