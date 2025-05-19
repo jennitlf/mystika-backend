@@ -1,3 +1,4 @@
+/* eslint-disable prettier/prettier */
 import { MigrationInterface, QueryRunner } from "typeorm";
 
 export class IncludeAdmSupportRole1747543867498 implements MigrationInterface {
