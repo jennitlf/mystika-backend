@@ -20,8 +20,4 @@ export class CreateCustomerDto {
   @IsNotEmpty()
   @IsString()
   readonly status: string;
-
-  @IsNotEmpty()
-  @IsString()
-  readonly role: string;
 }
