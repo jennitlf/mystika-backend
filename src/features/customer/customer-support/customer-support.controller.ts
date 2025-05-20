@@ -49,31 +49,23 @@ export class CustomerSupportController {
     return this.customerSupportService.findAllByUserId(userId);
   }
 
-  @UseGuards(
-    createRoleGuard(['adm', 'user']),
-    OwnershipOrAdminGuard,
-  )
+  @UseGuards(createRoleGuard(['adm', 'user']), OwnershipOrAdminGuard)
   @Get('record/:id')
   findOne(@Param('id') id: string) {
     return this.customerSupportService.findOne(+id);
   }
 
-  @UseGuards(
-    createRoleGuard(['adm', 'user']),
-    OwnershipOrAdminGuard,
-  )
+  @UseGuards(createRoleGuard(['adm', 'user']), OwnershipOrAdminGuard)
   @Put('record/:id')
   update(
     @Param('id') id: string,
     @Body() updateCustomerSupportDto: UpdateCustomerSupportDto,
   ) {
+    console.log(id, updateCustomerSupportDto);
     return this.customerSupportService.update(+id, updateCustomerSupportDto);
   }
 
-  @UseGuards(
-    createRoleGuard(['adm', 'user']),
-    OwnershipOrAdminGuard,
-  )
+  @UseGuards(createRoleGuard(['adm', 'user']), OwnershipOrAdminGuard)
   @Delete(':id')
   remove(@Param('id') id: string) {
     return this.customerSupportService.remove(+id);
