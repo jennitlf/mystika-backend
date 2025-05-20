@@ -17,7 +17,6 @@ export class ConsultationService {
   async create(createConsultationDto: any) {
     const {
       id_customer,
-      id_consultant_specialty,
       id_schedule_consultant,
       appoinment_date,
       appoinment_time,
@@ -25,10 +24,6 @@ export class ConsultationService {
     const appoinmentVerification = await this.consultationRepository
       .createQueryBuilder('consultation')
       .andWhere('consultation.id_customer = :id_customer', { id_customer })
-      .andWhere(
-        'consultation.id_consultant_specialty = :id_consultant_specialty',
-        { id_consultant_specialty },
-      )
       .andWhere(
         'consultation.id_schedule_consultant = :id_schedule_consultant',
         { id_schedule_consultant },
@@ -74,7 +69,11 @@ export class ConsultationService {
       .createQueryBuilder('consultation')
       .innerJoinAndSelect('consultation.customer', 'customer')
       .innerJoinAndSelect(
-        'consultation.consultantSpecialty',
+        'consultation.scheduleConsultant',
+        'scheduleConsultant',
+      )
+      .innerJoinAndSelect(
+        'scheduleConsultant.consultantSpecialty',
         'consultantSpecialty',
       )
       .innerJoinAndSelect('consultantSpecialty.specialty', 'specialty')
