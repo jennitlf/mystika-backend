@@ -56,7 +56,7 @@ export class CustomerSupport {
     name: 'status',
     type: 'varchar',
     length: 30,
-    default: 'pending',
+    default: 'pendente',
   })
   status: string;
 
