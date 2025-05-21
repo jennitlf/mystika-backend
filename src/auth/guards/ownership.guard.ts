@@ -12,6 +12,7 @@ export class OwnershipGuard implements CanActivate {
     const user = request.user;
     const userIdFromRoute = request.params.id;
     if (user.role === 'adm') {
+      // eslint-disable-next-line prettier/prettier
       return
     }
     if (user.role !== 'user' && user.id !== userIdFromRoute) {
