@@ -57,7 +57,7 @@ export class Consultation {
   status: string;
 
   @Column({
-    name: 'status',
+    name: 'attended',
     type: 'varchar',
     nullable: true,
     default: 'pending',
