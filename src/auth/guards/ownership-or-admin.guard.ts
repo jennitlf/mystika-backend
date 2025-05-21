@@ -22,7 +22,7 @@ export class OwnershipOrAdminGuard implements CanActivate {
       return true;
     }
 
-    const record = await this.customerSupportService.findOne(+id);
+    const record = await this.customerSupportService.findOne(id);
     if (!record) {
       throw new NotFoundException('Registro não encontrado');
     }
