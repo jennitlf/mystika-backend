@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Consultant } from 'src/shared/entities/consultant.entity';
@@ -126,6 +126,7 @@ export class GeneralFindService {
     };
   }
 }
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 function where(arg0: string, arg1: { status: string }) {
   throw new Error('Function not implemented.');
 }

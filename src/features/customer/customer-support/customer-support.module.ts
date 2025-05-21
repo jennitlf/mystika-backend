@@ -9,6 +9,7 @@ import { DecodeTokenMiddleware } from 'src/middlewares/decode-token.moddleware';
   imports: [TypeOrmModule.forFeature([CustomerSupport])],
   controllers: [CustomerSupportController],
   providers: [CustomerSupportService],
+  exports: [CustomerSupportService],
 })
 export class CustomerSupportModule {
   configure(consumer: MiddlewareConsumer) {

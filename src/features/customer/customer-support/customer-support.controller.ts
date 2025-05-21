@@ -13,7 +13,6 @@ import { CustomerSupportService } from './customer-support.service';
 import { CreateCustomerSupportDto } from '../../../shared/dtos/create-customer-support.dto';
 import { UpdateCustomerSupportDto } from '../../../shared/dtos/update-customer-support.dto';
 import { createRoleGuard } from 'src/auth/factories/role-guard.factory';
-import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
 import { ValidateUserGuard } from 'src/auth/guards/validate-user.guard';
 import { OwnershipOrAdminGuard } from 'src/auth/guards/ownership-or-admin.guard';
 
@@ -36,14 +35,14 @@ export class CustomerSupportController {
     );
   }
 
+  @UseGuards(createRoleGuard(['adm']))
   @Get()
-  @UseGuards(JwtAuthGuard, createRoleGuard(['adm']))
   findAll() {
     return this.customerSupportService.findAll();
   }
 
-  @Get('byUser')
   @UseGuards(createRoleGuard(['user']), ValidateUserGuard)
+  @Get('byUser')
   findAllByUser(@Request() req) {
     const userId = req.user.id;
     return this.customerSupportService.findAllByUserId(userId);

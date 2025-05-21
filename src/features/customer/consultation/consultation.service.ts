@@ -14,16 +14,14 @@ export class ConsultationService {
     private readonly consultationRepository: Repository<Consultation>,
   ) {}
 
-  async create(createConsultationDto: any) {
-    const {
-      id_customer,
-      id_schedule_consultant,
-      appoinment_date,
-      appoinment_time,
-    } = createConsultationDto;
+  async create(dataUser, createConsultationDto: any) {
+    const { id_schedule_consultant, appoinment_date, appoinment_time } =
+      createConsultationDto;
     const appoinmentVerification = await this.consultationRepository
       .createQueryBuilder('consultation')
-      .andWhere('consultation.id_customer = :id_customer', { id_customer })
+      .andWhere('consultation.id_customer = :id_customer', {
+        id_customer: dataUser,
+      })
       .andWhere(
         'consultation.id_schedule_consultant = :id_schedule_consultant',
         { id_schedule_consultant },
@@ -41,9 +39,10 @@ export class ConsultationService {
         HttpStatus.CONFLICT,
       );
     }
-    const consultation = this.consultationRepository.create(
-      createConsultationDto,
-    );
+    const consultation = this.consultationRepository.create({
+      id_customer: dataUser,
+      ...createConsultationDto,
+    });
     return this.consultationRepository.save(consultation);
   }
 
@@ -76,17 +75,22 @@ export class ConsultationService {
         'scheduleConsultant.consultantSpecialty',
         'consultantSpecialty',
       )
+      .innerJoinAndSelect('consultantSpecialty.consultant', 'consultant')
       .innerJoinAndSelect('consultantSpecialty.specialty', 'specialty')
-      // Seleciona somente os campos desejados:
       .select([
         'consultation.id',
         'consultation.appoinment_date',
         'consultation.appoinment_time',
         'consultation.status',
-        'consultation.id_schedule_consultant',
+        'customer.id',
+        'customer.name',
+        'scheduleConsultant.id',
         'consultantSpecialty.id',
         'consultantSpecialty.duration',
         'consultantSpecialty.value_per_duration',
+        'consultant.id',
+        'consultant.name',
+        'specialty.id',
         'specialty.name_specialty',
       ]);
 
@@ -105,9 +109,46 @@ export class ConsultationService {
       });
 
     query.skip(skip).take(limit);
+
     const [data, total] = await query.getManyAndCount();
+
+    const formattedData = data.map((consultation) => ({
+      id: consultation.id,
+      customer: {
+        id: consultation.customer.id,
+        name: consultation.customer.name,
+      },
+      schedule_consultant: {
+        id: consultation.scheduleConsultant.id,
+        consultant_specialty: {
+          id: consultation.scheduleConsultant.consultantSpecialty.id,
+          consultant: {
+            id: consultation.scheduleConsultant.consultantSpecialty.consultant
+              .id,
+            name: consultation.scheduleConsultant.consultantSpecialty.consultant
+              .name,
+          },
+          specialty: {
+            id: consultation.scheduleConsultant.consultantSpecialty.specialty
+              .id,
+            name_specialty:
+              consultation.scheduleConsultant.consultantSpecialty.specialty
+                .name_specialty,
+          },
+          value_per_duration:
+            consultation.scheduleConsultant.consultantSpecialty
+              .value_per_duration,
+          duration:
+            consultation.scheduleConsultant.consultantSpecialty.duration,
+        },
+      },
+      appoinment_date: consultation.appoinment_date,
+      appoinment_time: consultation.appoinment_time,
+      status: consultation.status,
+    }));
+
     return {
-      data,
+      data: formattedData,
       meta: {
         total,
         page,
@@ -116,14 +157,14 @@ export class ConsultationService {
     };
   }
 
-  async findOne(id: string) {
-    const consultation = await this.consultationRepository.findOne({
+  async findOne(dataUser: number) {
+    const consultation = await this.consultationRepository.find({
       where: {
-        id: +id,
+        id_customer: dataUser,
       },
     });
-    if (consultation) {
-      throw new NotFoundException(`Consultation ID: ${id} not found`);
+    if (!consultation) {
+      throw new NotFoundException(`Consultation ID: ${dataUser} not found`);
     }
     return consultation;
   }

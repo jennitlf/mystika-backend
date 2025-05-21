@@ -61,8 +61,6 @@ export class CustomerSupportService {
         `No customer support records found for user ID: ${userId}`,
       );
     }
-
-    console.log('Registros encontrados:', customerSupport);
     return customerSupport;
   }
 

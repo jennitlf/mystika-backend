@@ -3,29 +3,32 @@ import {
   Get,
   Post,
   Body,
-  Patch,
-  Param,
   Delete,
   Query,
   UseGuards,
+  Put,
+  Request,
 } from '@nestjs/common';
 import { ConsultationService } from './consultation.service';
 import { CreateConsultationDto } from 'src/shared/dtos/create-consultation.dto';
 import { UpdateConsultationDto } from 'src/shared/dtos/update-consultation.dto';
 import { ApiBearerAuth, ApiQuery } from '@nestjs/swagger';
-import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
+import { createRoleGuard } from 'src/auth/factories/role-guard.factory';
+import { OwnershipOrAdminGuard } from 'src/auth/guards/ownership-or-admin.guard';
 
 @ApiBearerAuth()
-@UseGuards(JwtAuthGuard)
 @Controller('consultation')
 export class ConsultationController {
   constructor(private readonly consultationService: ConsultationService) {}
 
+  @UseGuards(createRoleGuard(['user']))
   @Post()
-  create(@Body() createConsultationDto: CreateConsultationDto) {
-    return this.consultationService.create(createConsultationDto);
+  create(@Request() req, @Body() createConsultationDto: CreateConsultationDto) {
+    const dataUser = req.user.id;
+    return this.consultationService.create(dataUser, createConsultationDto);
   }
 
+  @UseGuards(createRoleGuard(['adm']))
   @Get()
   @ApiQuery({ name: 'idCustomer', required: false, type: Number, example: 1 })
   @ApiQuery({
@@ -63,21 +66,29 @@ export class ConsultationController {
     );
   }
 
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.consultationService.findOne(id);
+  @UseGuards(
+    createRoleGuard(['adm', 'user', 'consultant']),
+    OwnershipOrAdminGuard,
+  )
+  @Get('byUserId')
+  findOne(@Request() req) {
+    const dataUser = req.user.id;
+    return this.consultationService.findOne(dataUser);
   }
 
-  @Patch(':id')
-  update(
-    @Param('id') id: string,
-    @Body() updateConsultationDto: UpdateConsultationDto,
-  ) {
-    return this.consultationService.update(id, updateConsultationDto);
+  @UseGuards(
+    createRoleGuard(['adm', 'user', 'consultant']),
+    OwnershipOrAdminGuard,
+  )
+  @Put(':id')
+  update(@Request() req, @Body() updateConsultationDto: UpdateConsultationDto) {
+    const dataUser = req.user.id;
+    return this.consultationService.update(dataUser, updateConsultationDto);
   }
-
+  @UseGuards(createRoleGuard(['adm']))
   @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.consultationService.remove(id);
+  remove(@Request() req) {
+    const dataUser = req.user.id;
+    return this.consultationService.remove(dataUser);
   }
 }
