@@ -60,7 +60,6 @@ export class CustomerSupportController {
     @Param('id') id: string,
     @Body() updateCustomerSupportDto: UpdateCustomerSupportDto,
   ) {
-    console.log(id, updateCustomerSupportDto);
     return this.customerSupportService.update(+id, updateCustomerSupportDto);
   }
 
