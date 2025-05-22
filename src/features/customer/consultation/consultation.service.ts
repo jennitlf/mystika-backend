@@ -158,16 +158,74 @@ export class ConsultationService {
   }
 
   async findOne(dataUser: number) {
-    const consultation = await this.consultationRepository.find({
-      where: {
-        id_customer: dataUser,
-      },
-    });
-    if (!consultation) {
-      throw new NotFoundException(`Consultation ID: ${dataUser} not found`);
+    const query = this.consultationRepository
+    .createQueryBuilder('consultation')
+    .innerJoinAndSelect('consultation.customer', 'customer')
+    .innerJoinAndSelect('consultation.scheduleConsultant', 'scheduleConsultant')
+    .innerJoinAndSelect('scheduleConsultant.consultantSpecialty', 'consultantSpecialty')
+    .innerJoinAndSelect('consultantSpecialty.consultant', 'consultant')
+    .innerJoinAndSelect('consultantSpecialty.specialty', 'specialty')
+    .select([
+      'consultation.id',
+      'consultation.id_customer',
+      'consultation.id_schedule_consultant',
+      'consultation.appoinment_date',
+      'consultation.appoinment_time',
+      'consultation.status',
+      'consultation.attended',
+      'consultation.created_at',
+      'consultation.updated_at',
+      'customer.id',
+      'customer.name',
+      'scheduleConsultant.id',
+      'consultantSpecialty.id',
+      'consultantSpecialty.duration',
+      'consultantSpecialty.value_per_duration',
+      'consultant.id',
+      'consultant.name',
+      'specialty.id',
+      'specialty.name_specialty',
+    ])
+    .where('customer.id = :dataUser', { dataUser });
+  
+    const consultations = await query.getMany();
+  
+    if (!consultations.length) {
+      throw new NotFoundException(`Consultations for user ID: ${dataUser} not found`);
     }
-    return consultation;
+  
+    const formattedData = consultations.map((consultation) => ({
+      id: consultation.id,
+      customer: {
+        id: consultation.customer.id,
+        name: consultation.customer.name,
+      },
+      schedule_consultant: {
+        id: consultation.scheduleConsultant.id,
+        consultant_specialty: {
+          id: consultation.scheduleConsultant.consultantSpecialty.id,
+          consultant: {
+            id: consultation.scheduleConsultant.consultantSpecialty.consultant.id,
+            name: consultation.scheduleConsultant.consultantSpecialty.consultant.name,
+          },
+          specialty: {
+            id: consultation.scheduleConsultant.consultantSpecialty.specialty.id,
+            name_specialty: consultation.scheduleConsultant.consultantSpecialty.specialty.name_specialty,
+          },
+          value_per_duration: consultation.scheduleConsultant.consultantSpecialty.value_per_duration,
+          duration: consultation.scheduleConsultant.consultantSpecialty.duration,
+        },
+      },
+      appoinment_date: consultation.appoinment_date,
+      appoinment_time: consultation.appoinment_time,
+      status: consultation.status,
+      attended: consultation.attended,
+      created_at: consultation.created_at,
+      updated_at: consultation.updated_at,
+    }));
+    return { data: formattedData };
   }
+  
 
   async update(id: string, updateConsultationDto: any) {
     const consultation = await this.consultationRepository.preload({

@@ -40,7 +40,7 @@ export class AuthController {
   async login(@Body() body: { email: string; password: string }) {
     const user = await this.authService.validateUser(body.email, body.password);
     if (!user) {
-      throw new Error('Credenciais inválidas');
+      throw new Error('Usuário ou senha incorreta');
     }
     return this.authService.login(user);
   }

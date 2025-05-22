@@ -71,9 +71,10 @@ export class ConsultationController {
     OwnershipOrAdminGuard,
   )
   @Get('byUserId')
-  findOne(@Request() req) {
+  async findOne(@Request() req) {
     const dataUser = req.user.id;
-    return this.consultationService.findOne(dataUser);
+    const result = await this.consultationService.findOne(dataUser)
+    return result;
   }
 
   @UseGuards(
