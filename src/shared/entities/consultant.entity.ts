@@ -74,7 +74,7 @@ export class Consultant {
     nullable: false,
     type: 'varchar',
     length: 300,
-    default: 'NaN',
+    default: 'https://upload.wikimedia.org/wikipedia/commons/8/89/Portrait_Placeholder.png',
   })
   image_consultant: string;
 
