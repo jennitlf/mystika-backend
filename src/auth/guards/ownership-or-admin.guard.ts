@@ -17,20 +17,22 @@ export class OwnershipOrAdminGuard implements CanActivate {
     const request = context.switchToHttp().getRequest();
     const user = request.user;
     const id = request.params.id;
-
+    
     if (user.role === 'adm') {
       return true;
     }
-
-    const record = await this.customerSupportService.findOne(id);
-    if (!record) {
-      throw new NotFoundException('Registro não encontrado');
-    }
-
-    if (record.id_customer !== user.id) {
-      throw new ForbiddenException(
-        'Acesso negado: registro não pertence a você.',
-      );
+    if(request.originalUrl.includes('/customer-support/record/')) {
+      const record = await this.customerSupportService.findOne(id);
+      if (!record) {
+        throw new NotFoundException('Registro não encontrado');
+      }
+      if (record.id_customer !== user.id) {
+        throw new ForbiddenException(
+          'Acesso negado: registro não pertence a você.',
+        );
+      }
+    }else{
+      return true
     }
 
     return true;
