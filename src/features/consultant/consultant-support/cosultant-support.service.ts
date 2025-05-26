@@ -3,7 +3,7 @@ import { Injectable } from '@nestjs/common';
 // import { UpdateCosultantSupportDto } from './dto/update-cosultant-support.dto';
 
 @Injectable()
-export class CosultantSupportService {
+export class ConsultantSupportService {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   create(_createCosultantSupportDto: any) {
     return 'This action adds a new cosultantSupport';

@@ -3,16 +3,16 @@ import { AppService } from './app.service';
 import { ConsultantModule } from './features/consultant/consultant/consultant.module';
 import { DatabaseModule } from './database/database.module';
 import { ConfigModule } from '@nestjs/config';
-import { SpecialtyModule } from './features/customer/specialty/specialty.module';
-import { ConsultantSpecialtyModule } from './features/customer/consultant-specialty/consultant-specialty.module';
+import { SpecialtyModule } from './features/consultant/specialty/specialty.module';
+import { ConsultantSpecialtyModule } from './features/consultant/consultant-specialty/consultant-specialty.module';
 import { AppController } from './app.controller';
 import { GeneralFindModule } from './features/customer/general-find/general-find.module';
 import { UserModule } from './features/customer/user/user.module';
 import { AuthModule } from './auth/auth.module';
-import { ScheduleConsultantModule } from './features/customer/schedule-consultant/schedule-consultant.module';
-import { ScheduleExceptionModule } from './features/customer/schedule-exception/schedule-exception.module';
+import { ScheduleConsultantModule } from './features/consultant/schedule-consultant/schedule-consultant.module';
+import { ScheduleExceptionModule } from './features/consultant/schedule-exception/schedule-exception.module';
 import { ConsultationModule } from './features/customer/consultation/consultation.module';
-import { CosultantSupportModule } from './features/consultant/cosultant-support/cosultant-support.module';
+import { ConsultantSupportModule } from './features/consultant/consultant-support/cosultant-support.module';
 import { CustomerSupportModule } from './features/customer/customer-support/customer-support.module';
 
 @Module({
@@ -32,7 +32,7 @@ import { CustomerSupportModule } from './features/customer/customer-support/cust
     ScheduleExceptionModule,
     ConsultationModule,
     CustomerSupportModule,
-    CosultantSupportModule,
+    ConsultantSupportModule,
   ],
   controllers: [AppController],
   providers: [AppService],

@@ -7,38 +7,38 @@ import {
   Param,
   Delete,
 } from '@nestjs/common';
-import { CosultantSupportService } from './cosultant-support.service';
+import { ConsultantSupportService } from './cosultant-support.service';
 // import { CreateCosultantSupportDto } from './dto/create-cosultant-support.dto';
 // import { UpdateCosultantSupportDto } from './dto/update-cosultant-support.dto';
 
 @Controller('cosultant-support')
-export class CosultantSupportController {
+export class ConsultantSupportController {
   constructor(
-    private readonly cosultantSupportService: CosultantSupportService,
+    private readonly consultantSupportService: ConsultantSupportService,
   ) {}
 
   @Post()
   create(@Body() createCosultantSupportDto: any) {
-    return this.cosultantSupportService.create(createCosultantSupportDto);
+    return this.consultantSupportService.create(createCosultantSupportDto);
   }
 
   @Get()
   findAll() {
-    return this.cosultantSupportService.findAll();
+    return this.consultantSupportService.findAll();
   }
 
   @Get(':id')
   findOne(@Param('id') id: string) {
-    return this.cosultantSupportService.findOne(+id);
+    return this.consultantSupportService.findOne(+id);
   }
 
   @Patch(':id')
   update(@Param('id') id: string, @Body() updateCosultantSupportDto: any) {
-    return this.cosultantSupportService.update(+id, updateCosultantSupportDto);
+    return this.consultantSupportService.update(+id, updateCosultantSupportDto);
   }
 
   @Delete(':id')
   remove(@Param('id') id: string) {
-    return this.cosultantSupportService.remove(+id);
+    return this.consultantSupportService.remove(+id);
   }
 }
