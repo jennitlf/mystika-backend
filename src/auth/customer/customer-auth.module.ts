@@ -1,12 +1,12 @@
+// customer-auth.module.ts
 import { Module } from '@nestjs/common';
-import { AuthService } from './auth.service';
-import { AuthController } from './auth.controller';
+import { CustomerAuthController } from './customer-auth.controller';
+import { CustomerAuthService } from './customer-auth.service';
 import { JwtModule } from '@nestjs/jwt';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { Customer } from 'src/shared/entities/customer.entity';
 import { UserModule } from 'src/features/customer/user/user.module';
-import { JwtStrategy } from './jwt-strategy';
 
 @Module({
   imports: [
@@ -19,9 +19,9 @@ import { JwtStrategy } from './jwt-strategy';
         signOptions: { expiresIn: '1h' },
       }),
     }),
-    UserModule,
+    UserModule
   ],
-  controllers: [AuthController],
-  providers: [AuthService, JwtStrategy],
+  controllers: [CustomerAuthController],
+  providers: [CustomerAuthService],
 })
-export class AuthModule {}
+export class CustomerAuthModule {}

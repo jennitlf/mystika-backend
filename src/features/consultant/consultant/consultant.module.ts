@@ -12,5 +12,6 @@ import { ConsultantSpecialty } from 'src/shared/entities/consultant_specialty.en
   ],
   controllers: [ConsultantController],
   providers: [ConsultantService],
+  exports: [ConsultantService],
 })
 export class ConsultantModule {}

@@ -8,7 +8,7 @@ import { ConsultantSpecialtyModule } from './features/consultant/consultant-spec
 import { AppController } from './app.controller';
 import { GeneralFindModule } from './features/customer/general-find/general-find.module';
 import { UserModule } from './features/customer/user/user.module';
-import { AuthModule } from './auth/auth.module';
+import { BaseAuthModule } from './auth/base-auth.module';
 import { ScheduleConsultantModule } from './features/consultant/schedule-consultant/schedule-consultant.module';
 import { ScheduleExceptionModule } from './features/consultant/schedule-exception/schedule-exception.module';
 import { ConsultationModule } from './features/customer/consultation/consultation.module';
@@ -20,14 +20,13 @@ import { CustomerSupportModule } from './features/customer/customer-support/cust
     ConfigModule.forRoot({
       isGlobal: true,
     }),
-    AuthModule,
     DatabaseModule,
     ConsultantModule,
     SpecialtyModule,
     ConsultantSpecialtyModule,
     GeneralFindModule,
     UserModule,
-    AuthModule,
+    BaseAuthModule,
     ScheduleConsultantModule,
     ScheduleExceptionModule,
     ConsultationModule,

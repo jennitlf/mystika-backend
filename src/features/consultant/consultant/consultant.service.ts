@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { HttpException, HttpStatus, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Consultant } from 'src/shared/entities/consultant.entity';
@@ -19,17 +19,14 @@ export class ConsultantService {
     page = isNaN(page) ? 1 : page;
     limit = isNaN(limit) ? 10 : limit;
 
-    // Calcular o offset
     const skip = (page - 1) * limit;
 
-    // Obter os dados paginados e o total de registros
     const [data, total] = await this.consultantRepository.findAndCount({
       skip,
       take: limit,
       order: { created_at: 'DESC' },
     });
 
-    // Retornar os dados e metadados
     return {
       data,
       meta: {
@@ -38,6 +35,36 @@ export class ConsultantService {
         lastPage: Math.ceil(total / limit),
       },
     };
+  }
+
+  async findByEmail(email: string) {
+    const consultant = await this.consultantRepository.findOne({
+      where: { email: email },
+    });
+    if (!consultant) {
+      throw new HttpException('Usuário não cadastrado', HttpStatus.BAD_REQUEST);
+    }
+    return consultant;
+  }
+  async findByEmailforRegister(email: string) {
+    const consultant = await this.consultantRepository.findOne({
+      where: { email: email },
+    });
+    if (!consultant) {
+      return null;
+    }
+    return consultant;
+  }
+  
+
+  async findByCpf(cpf: string) {
+    const consultant = await this.consultantRepository.findOne({
+      where: { cpf: cpf },
+    });
+    if (!consultant) {
+      return null;
+    }
+    return consultant;
   }
 
   async findOne(id: string) {

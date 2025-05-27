@@ -44,6 +44,15 @@ export class UserService {
 
     return customer;
   }
+  async findByEmailforRegister(email: string) {
+    const customer = await this.customerRepository.findOne({
+      where: { email: email },
+    });
+    if (!customer) {
+      return null;
+    }
+    return customer;
+  }
 
   async findOne(id: string) {
     const customer = await this.customerRepository.findOne({

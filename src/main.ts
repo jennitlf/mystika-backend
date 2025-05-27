@@ -2,6 +2,7 @@ import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { ValidationPipe } from '@nestjs/common';
+import { GlobalExceptionFilter } from './middlewares/interceptor-errors';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -17,18 +18,11 @@ async function bootstrap() {
       'Esta documentação visa esclarecer as funcionalidades do site Mystika',
     )
     .setVersion('1.0')
-    .addBearerAuth(
-    //   {
-    //     type: 'http',
-    //     scheme: 'bearer',
-    //     bearerFormat: 'JWT',
-    //   },
-    //   'access-token',
-    // )
-    )
+    .addBearerAuth()
     .build();
 
   app.useGlobalPipes(new ValidationPipe());
+  app.useGlobalFilters(new GlobalExceptionFilter());
   const documentFactory = () => SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api', app, documentFactory);
 
