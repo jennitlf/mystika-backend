@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { MiddlewareConsumer, Module } from '@nestjs/common';
 import { AppService } from './app.service';
 import { ConsultantModule } from './features/consultant/consultant/consultant.module';
 import { DatabaseModule } from './database/database.module';
@@ -36,4 +36,14 @@ import { CustomerSupportModule } from './features/customer/customer-support/cust
   controllers: [AppController],
   providers: [AppService],
 })
-export class AppModule {}
+export class AppModule {
+  configure(consumer: MiddlewareConsumer) {
+    consumer.apply((req, res, next) => {
+      if (req.url === '/favicon.ico') {
+        res.status(204).end();
+      } else {
+        next();
+      }
+    }).forRoutes('*');
+  }
+}
