@@ -14,12 +14,12 @@ export class ConsultantSupport {
   id: number;
 
   @Column({ name: 'id_consultant', nullable: false, type: 'int' })
-  id_consultant: Consultant;
+  id_consultant: number;
 
   @Column({ name: 'email', nullable: false, type: 'varchar', length: 30 })
   email: string;
 
-  @Column({ name: 'phone', type: 'int', nullable: false })
+  @Column({ name: 'phone', type: 'varchar', nullable: false })
   phone: string;
 
   @Column({ name: 'title', type: 'varchar', nullable: false, length: 100 })
@@ -33,7 +33,7 @@ export class ConsultantSupport {
     type: 'varchar',
     nullable: false,
     length: 50,
-    default: 'pending',
+    default: 'pendente',
   })
   status: string;
 
@@ -41,7 +41,7 @@ export class ConsultantSupport {
     name: 'admResponsible',
     type: 'int',
     nullable: false,
-    default: 0,
+    default: 1,
   })
   admResponsible: Adm;
 

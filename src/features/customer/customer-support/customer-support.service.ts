@@ -22,8 +22,6 @@ export class CustomerSupportService {
   ) {
     const customerSupport = this.customerSupportRepository.create({
       id_customer: dataUser.id,
-      email: dataUser.email,
-      phone: dataUser.phone,
       ...createCustomerSupportDto,
     });
     try {

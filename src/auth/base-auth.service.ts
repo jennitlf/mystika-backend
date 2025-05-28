@@ -52,12 +52,12 @@ export abstract class BaseAuthService<T> {
       throw new BadRequestException('CPF inválido');
     }
   
-    // Verifica se todos os dígitos são iguais, o que torna o CPF inválido
+    
     if (/^(\d)\1+$/.test(cpf)) {
       throw new BadRequestException('CPF inválido');
     }
   
-    // Validação dos dígitos verificadores
+   
     const calculateCheckDigit = (cpf: string, factor: number) => {
       let total = 0;
       for (let i = 0; i < factor - 1; i++) {
@@ -97,7 +97,6 @@ export abstract class BaseAuthService<T> {
     const payload = {
       id: user.id,
       name: user.name,
-      email: user.email,
       role: user.role,
     };
     return { access_token: this.jwtService.sign(payload) };
