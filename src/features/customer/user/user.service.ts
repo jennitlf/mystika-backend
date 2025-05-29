@@ -31,7 +31,6 @@ export class UserService {
   }
 
   async findAll() {
-    console.log('estou no service');
     return this.customerRepository.find();
   }
 
