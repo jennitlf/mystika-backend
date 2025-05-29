@@ -16,6 +16,7 @@ export class RoleGuard implements CanActivate {
     console.log('----Required Roles:', this.requiredRoles);
     console.log(this.requiredRoles.includes(user.role))
     if (!user || !this.requiredRoles.includes(user.role)) {
+      console.log('----Access Denied');
       throw new ForbiddenException('Acesso negado: Permissão insuficiente.');
     }
     return true;
