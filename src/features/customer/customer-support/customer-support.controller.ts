@@ -29,8 +29,6 @@ export class CustomerSupportController {
     @Body() createCustomerSupportDto: CreateCustomerSupportDto,
   ) {
     const dataUser = req.user;
-    console.log('User data:', dataUser);
-    console.log('-------------estou no controller-------------');
     return this.customerSupportService.create(
       dataUser,
       createCustomerSupportDto,
