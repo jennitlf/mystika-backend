@@ -30,6 +30,7 @@ export class UserController {
   @Get()
   @UseGuards(createRoleGuard(['adm', 'user']))
   findAll() {
+    console.log('estou no controler')
     return this.userService.findAll();
   }
 
