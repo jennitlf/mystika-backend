@@ -10,7 +10,7 @@ export class CustomerAuthController {
   async register(@Req() req: Request, @Body() body: CreateCustomerDto) {
     const role = req.url.includes('consultant')
     ? 'consultant'
-    : req.url.includes('user')
+    : req.url.includes('customer')
     ? 'user'
     : 'adm';
 
