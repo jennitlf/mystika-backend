@@ -20,10 +20,12 @@ export class CustomerSupportService {
     dataUser: any,
     createCustomerSupportDto: CreateCustomerSupportDto,
   ) {
+    console.log('User data:', dataUser.id);
     const customerSupport = this.customerSupportRepository.create({
       id_customer: dataUser.id,
       ...createCustomerSupportDto,
     });
+    console.log(customerSupport);
     try {
       return await this.customerSupportRepository.save(customerSupport);
       // eslint-disable-next-line @typescript-eslint/no-unused-vars

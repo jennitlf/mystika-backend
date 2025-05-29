@@ -22,13 +22,15 @@ export class CustomerSupportController {
     private readonly customerSupportService: CustomerSupportService,
   ) {}
 
-  @UseGuards(createRoleGuard(['user']), ValidateUserGuard)
+  @UseGuards(createRoleGuard(['user']))
   @Post()
   create(
     @Request() req,
     @Body() createCustomerSupportDto: CreateCustomerSupportDto,
   ) {
     const dataUser = req.user;
+    console.log('User data:', dataUser);
+    console.log('-------------estou no controller-------------');
     return this.customerSupportService.create(
       dataUser,
       createCustomerSupportDto,
