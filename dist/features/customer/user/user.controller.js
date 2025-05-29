@@ -18,7 +18,6 @@ const user_service_1 = require("./user.service");
 const swagger_1 = require("@nestjs/swagger");
 const create_customer_dto_1 = require("../../../shared/dtos/create-customer.dto");
 const update_customer_dto_1 = require("../../../shared/dtos/update-customer.dto");
-const jwt_auth_guard_1 = require("../../../auth/guards/jwt-auth.guard");
 const ownership_guard_1 = require("../../../auth/guards/ownership.guard");
 const role_guard_factory_1 = require("../../../auth/factories/role-guard.factory");
 let UserController = class UserController {
@@ -54,7 +53,7 @@ __decorate([
 ], UserController.prototype, "create", null);
 __decorate([
     (0, common_1.Get)(),
-    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, (0, role_guard_factory_1.createRoleGuard)(['adm', 'user'])),
+    (0, common_1.UseGuards)((0, role_guard_factory_1.createRoleGuard)(['adm', 'user'])),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", []),
     __metadata("design:returntype", void 0)
