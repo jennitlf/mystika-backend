@@ -45,8 +45,9 @@ export class ConsultantSupportService {
     const consultantSupport = await this.consultantSupportRepository.findOne({
       where: { id: id },
     });
+    console.log(consultantSupport);
     if (!consultantSupport) {
-      throw new NotFoundException(`Customer support ID: ${id} not found`);
+      throw new NotFoundException(`Consultant support ID: ${id} not found`);
     }
     return consultantSupport;
   }
