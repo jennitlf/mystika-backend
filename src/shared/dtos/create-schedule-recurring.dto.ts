@@ -20,10 +20,6 @@ export class CreateScheduleRecurringDto {
   readonly end_date: string;
 
   @IsNotEmpty()
-  @IsArray()
-  readonly days_of_week: number[]; // 0: Domingo, 1: Segunda, etc.
-
-  @IsNotEmpty()
   @IsString()
   readonly hour_initial: string;
 
