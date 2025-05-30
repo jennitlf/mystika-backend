@@ -178,30 +178,28 @@ export class ScheduleConsultantService {
       date <= endDate;
       date.setDate(date.getDate() + 1)
     ) {
-      if (days_of_week.includes(date.getDay())) {
-        const scheduleDate = this.dateUtilsService.getZonedDate(
-          new Date(date.toISOString().split('T')[0] + 'T00:00:00'),
-        );
-        const scheduleExists = await this.scheduleConsultantRepository.findOne({
-          where: {
+      const scheduleDate = this.dateUtilsService.getZonedDate(
+        new Date(date.toISOString().split('T')[0] + 'T00:00:00'),
+      );
+      const scheduleExists = await this.scheduleConsultantRepository.findOne({
+        where: {
+          id_consultant_specialty,
+          date: scheduleDate,
+          hour_initial,
+          hour_end,
+        },
+      });
+    
+      if (!scheduleExists) {
+        schedules.push(
+          this.scheduleConsultantRepository.create({
             id_consultant_specialty,
-            date: scheduleDate,
+            date: date.toISOString().split('T')[0],
             hour_initial,
             hour_end,
-          },
-        });
-
-        if (!scheduleExists) {
-          schedules.push(
-            this.scheduleConsultantRepository.create({
-              id_consultant_specialty,
-              date: date.toISOString().split('T')[0],
-              hour_initial,
-              hour_end,
-              status,
-            }),
-          );
-        }
+            status,
+          }),
+        );
       }
     }
 
