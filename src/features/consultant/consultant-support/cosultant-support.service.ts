@@ -25,7 +25,6 @@ export class ConsultantSupportService {
       id_consultant: UserId,
       ...createConsultantSupportDto,
     });
-    console.log(consultantSupport)
     try {
       return await this.consultantSupportRepository.save(consultantSupport);
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -45,7 +44,6 @@ export class ConsultantSupportService {
     const consultantSupport = await this.consultantSupportRepository.findOne({
       where: { id: id },
     });
-    console.log(consultantSupport);
     if (!consultantSupport) {
       throw new NotFoundException(`Consultant support ID: ${id} not found`);
     }
