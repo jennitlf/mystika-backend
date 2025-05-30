@@ -22,7 +22,6 @@ export class DecodeTokenMiddleware implements NestMiddleware {
     try {
       const decoded = jwt.verify(token, process.env.JWT_SECRET);
       (req as RequestWithUser).user = decoded;
-      console.log('Token decodificado com sucesso:', decoded);
       next();
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (err) {
