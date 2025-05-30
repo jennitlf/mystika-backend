@@ -8,5 +8,6 @@ import { ConsultantSpecialty } from 'src/shared/entities/consultant_specialty.en
   imports: [TypeOrmModule.forFeature([ConsultantSpecialty])],
   controllers: [ConsultantSpecialtyController],
   providers: [ConsultantSpecialtyService],
+  exports: [ConsultantSpecialtyService],
 })
 export class ConsultantSpecialtyModule {}

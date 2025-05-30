@@ -82,6 +82,25 @@ export class ConsultantSpecialtyService {
     return consultantSpecialty;
   }
 
+  // async findByIdConsultantSpecialty(idConsultantSpecialty: number) {
+  //   const query = this.consultantSpecialtyRepository
+  //   .createQueryBuilder('consultantSpecialty')
+  //   .innerJoinAndSelect('consultantSpecialty.consultant', 'consultant')
+
+  //   query.andWhere('consultantSpecialty.id = :idConsultantSpecialty', {
+  //     idConsultantSpecialty,
+  //   });
+
+  //   const [data, total] = await query.getManyAndCount();
+
+  //   return {
+  //     data,
+  //     meta: {
+  //       total
+  //     },
+  //   };
+  // }
+
   async update(id: string, updateConsultantSpecialtyDto: any) {
     const consultantSpecialty =
       await this.consultantSpecialtyRepository.preload({

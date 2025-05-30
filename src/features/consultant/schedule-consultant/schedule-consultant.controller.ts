@@ -12,8 +12,9 @@ import {
 import { ScheduleConsultantService } from './schedule-consultant.service';
 import { CreateScheduleConsultantDto } from 'src/shared/dtos/create-schedule-consultant.dto';
 import { ApiBearerAuth, ApiQuery } from '@nestjs/swagger';
-import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
 import { CreateScheduleRecurringDto } from 'src/shared/dtos/create-schedule-recurring.dto';
+import { createRoleGuard } from 'src/auth/factories/role-guard.factory';
+import { OwnershipScheduleConsultant } from 'src/auth/guards/ownership-schedule-consultant.guard';
 
 @ApiBearerAuth()
 @Controller('schedule-consultant')
@@ -39,13 +40,13 @@ export class ScheduleConsultantController {
     );
   }
 
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(createRoleGuard(['adm', 'consultant']), OwnershipScheduleConsultant)
   @Post()
   create(@Body() createScheduleConsultantDto: CreateScheduleConsultantDto) {
     return this.scheduleConsultantService.create(createScheduleConsultantDto);
   }
   @Post('recurring')
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(createRoleGuard(['adm', 'consultant']), OwnershipScheduleConsultant)
   async createRecurring(
     @Body() createRecurringScheduleDto: CreateScheduleRecurringDto,
   ) {
@@ -54,7 +55,7 @@ export class ScheduleConsultantController {
     );
   }
 
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(createRoleGuard(['adm', 'consultant']), OwnershipScheduleConsultant)
   @Delete(':id')
   remove(@Param('id') id: string) {
     return this.scheduleConsultantService.remove(id);

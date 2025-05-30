@@ -12,7 +12,6 @@ import { UserService } from './user.service';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { CreateCustomerDto } from 'src/shared/dtos/create-customer.dto';
 import { UpdateCostumerDto } from 'src/shared/dtos/update-customer.dto';
-import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
 import { OwnershipGuard } from 'src/auth/guards/ownership.guard';
 import { createRoleGuard } from 'src/auth/factories/role-guard.factory';
 

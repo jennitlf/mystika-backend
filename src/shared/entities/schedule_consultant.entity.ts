@@ -21,9 +21,6 @@ export class ScheduleConsultant {
   @Column({ name: 'date', type: 'date', nullable: false })
   date: Date;
 
-  @Column({ name: 'day_week', type: 'int', nullable: false })
-  day_week: number;
-
   @Column({ name: 'hour_initial', type: 'time', nullable: false })
   hour_initial: string;
 

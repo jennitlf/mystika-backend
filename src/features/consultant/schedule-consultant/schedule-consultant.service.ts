@@ -206,6 +206,7 @@ export class ScheduleConsultantService {
     }
 
     if (schedules.length > 0) {
+      console.log(schedules)
       return this.scheduleConsultantRepository.save(schedules);
     }
 

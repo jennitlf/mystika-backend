@@ -10,10 +10,6 @@ export class CreateScheduleConsultantDto {
   readonly date: string;
 
   @IsNotEmpty()
-  @IsNumber()
-  readonly day_week: number;
-
-  @IsNotEmpty()
   @IsString()
   readonly hour_initial: string;
 
