@@ -48,7 +48,7 @@ export class CustomerSupport {
     name: 'content',
     type: 'varchar',
     nullable: false,
-    length: 300,
+    length: 600,
   })
   content: string;
 
