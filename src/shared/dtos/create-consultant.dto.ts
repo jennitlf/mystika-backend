@@ -35,10 +35,6 @@ export class CreateConsultantDto {
 
   @IsNotEmpty()
   @IsString()
-  readonly image_consultant: string;
-
-  @IsNotEmpty()
-  @IsString()
   readonly consultations_carried_out: string;
 
   @IsNotEmpty()
