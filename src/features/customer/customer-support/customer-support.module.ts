@@ -14,7 +14,7 @@ import { ConsultationModule } from 'src/features/customer/consultation/consultat
 @Module({
   imports: [
     TypeOrmModule.forFeature([CustomerSupport]),
-    forwardRef(() => ConsultationModule), // Adicione aqui
+    forwardRef(() => ConsultationModule),
   ],
   controllers: [CustomerSupportController],
   providers: [CustomerSupportService],
