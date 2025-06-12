@@ -154,7 +154,6 @@ export class ScheduleConsultantService {
       id_consultant_specialty,
       start_date,
       end_date,
-      days_of_week,
       hour_initial,
       hour_end,
       status,

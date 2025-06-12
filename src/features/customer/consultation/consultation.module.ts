@@ -15,6 +15,7 @@ import { CustomerSupportModule } from '../customer-support/customer-support.modu
   ],
   controllers: [ConsultationController],
   providers: [ConsultationService],
+  exports: [ConsultationService],
 })
 export class ConsultationModule {
   configure(consumer: MiddlewareConsumer) {

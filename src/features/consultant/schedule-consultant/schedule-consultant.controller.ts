@@ -50,6 +50,7 @@ export class ScheduleConsultantController {
   async createRecurring(
     @Body() createRecurringScheduleDto: CreateScheduleRecurringDto,
   ) {
+    console.log('passei pelos guards')
     return this.scheduleConsultantService.createRecurring(
       createRecurringScheduleDto,
     );

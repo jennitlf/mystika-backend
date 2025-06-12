@@ -8,6 +8,7 @@ import {
   UseGuards,
   Put,
   Request,
+  Param,
 } from '@nestjs/common';
 import { ConsultationService } from './consultation.service';
 import { CreateConsultationDto } from 'src/shared/dtos/create-consultation.dto';
@@ -76,15 +77,21 @@ export class ConsultationController {
     const result = await this.consultationService.findOne(dataUser)
     return result;
   }
+  @UseGuards(createRoleGuard(['consultant']))
+  @Get('byConsultorId')
+  async findByConsultorId(@Request() req) {
+    const dataUser = req.user.id;
+    const result = await this.consultationService.findOneByIdConsultant(dataUser)
+    return result;
+  }
 
   @UseGuards(
     createRoleGuard(['adm', 'user', 'consultant']),
     OwnershipOrAdminGuard,
   )
   @Put(':id')
-  update(@Request() req, @Body() updateConsultationDto: UpdateConsultationDto) {
-    const dataUser = req.user.id;
-    return this.consultationService.update(dataUser, updateConsultationDto);
+  update(@Param('id') id: string, @Body() updateConsultationDto: UpdateConsultationDto) {
+    return this.consultationService.update(id, updateConsultationDto);
   }
   @UseGuards(createRoleGuard(['adm']))
   @Delete(':id')
