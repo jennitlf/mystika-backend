@@ -52,7 +52,7 @@ export class Consultation {
     type: 'varchar',
     nullable: true,
     length: '15',
-    default: 'pending',
+    default: 'pendente',
   })
   status: string;
 
@@ -60,8 +60,8 @@ export class Consultation {
     name: 'attended',
     type: 'varchar',
     nullable: true,
-    default: 'pending',
-    length: 7,
+    default: 'pendente',
+    length: 9,
   })
   attended: string;
   @CreateDateColumn()
