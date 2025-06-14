@@ -19,7 +19,6 @@ import { ConsultantSpecialtyService } from 'src/features/consultant/consultant-s
         // eslint-disable-next-line prettier/prettier
         return
       }
-
       const body = request.body;
       const consultantSpecialty = await this.consultantSpecialty.findOne(body.id_consultant_specialty);
       

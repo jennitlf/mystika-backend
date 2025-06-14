@@ -45,12 +45,12 @@ export class ScheduleConsultantController {
   create(@Body() createScheduleConsultantDto: CreateScheduleConsultantDto) {
     return this.scheduleConsultantService.create(createScheduleConsultantDto);
   }
+
   @Post('recurring')
   @UseGuards(createRoleGuard(['adm', 'consultant']), OwnershipScheduleConsultant)
   async createRecurring(
     @Body() createRecurringScheduleDto: CreateScheduleRecurringDto,
   ) {
-    console.log('passei pelos guards')
     return this.scheduleConsultantService.createRecurring(
       createRecurringScheduleDto,
     );
