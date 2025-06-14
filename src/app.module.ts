@@ -14,6 +14,7 @@ import { ScheduleExceptionModule } from './features/consultant/schedule-exceptio
 import { ConsultationModule } from './features/customer/consultation/consultation.module';
 import { ConsultantSupportModule } from './features/consultant/consultant-support/cosultant-support.module';
 import { CustomerSupportModule } from './features/customer/customer-support/customer-support.module';
+import { EmailModule } from './features/email/email.module';
 
 @Module({
   imports: [
@@ -32,6 +33,7 @@ import { CustomerSupportModule } from './features/customer/customer-support/cust
     ConsultationModule,
     CustomerSupportModule,
     ConsultantSupportModule,
+    EmailModule,
   ],
   controllers: [AppController],
   providers: [AppService],

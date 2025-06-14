@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   HttpException,
   HttpStatus,
   Injectable,
@@ -398,15 +399,35 @@ export class ConsultationService {
 
   async update(id: string, updateConsultationDto: any) {
     const consultation = await this.consultationRepository.preload({
-      ...updateConsultationDto,
       id: +id,
     });
+
     if (!consultation) {
       throw new NotFoundException(`Consultation ID: ${id} not found`);
     }
+
+    if (updateConsultationDto.status !== undefined) {
+      const currentStatus = consultation.status;
+      const newStatus = updateConsultationDto.status;
+
+      const allowedStatuses = ['pendente', 'realizada', 'cancelada'];
+
+      if (!allowedStatuses.includes(newStatus)) {
+        throw new BadRequestException(`Invalid status: ${newStatus}. Allowed statuses are: ${allowedStatuses.join(', ')}`);
+      }
+      if (currentStatus !== 'pendente' && currentStatus !== newStatus) {
+        throw new BadRequestException(`Consultation status has already been updated and cannot be changed again.`);
+      }
+      if (currentStatus === 'pendente') {
+        if (newStatus !== 'realizada' && newStatus !== 'cancelada') {
+          throw new BadRequestException(`Status can only be changed from 'pendente' to 'realizada' or 'cancelada'.`);
+        }
+      }
+    }
+    Object.assign(consultation, updateConsultationDto);
+
     return this.consultationRepository.save(consultation);
   }
-
   async remove(id: string) {
     const consultation = await this.consultationRepository.findOne({
       where: { id: +id },
