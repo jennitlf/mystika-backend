@@ -1,3 +1,4 @@
+// src/features/consultation/consultation.controller.ts
 import {
   Controller,
   Get,
@@ -6,9 +7,9 @@ import {
   Delete,
   Query,
   UseGuards,
-  Put,
   Request,
   Param,
+  Patch,
 } from '@nestjs/common';
 import { ConsultationService } from './consultation.service';
 import { CreateConsultationDto } from 'src/shared/dtos/create-consultation.dto';
@@ -16,6 +17,7 @@ import { UpdateConsultationDto } from 'src/shared/dtos/update-consultation.dto';
 import { ApiBearerAuth, ApiQuery } from '@nestjs/swagger';
 import { createRoleGuard } from 'src/auth/factories/role-guard.factory';
 import { OwnershipOrAdminGuard } from 'src/auth/guards/ownership-or-admin.guard';
+import { PaginationQueryDto } from 'src/shared/dtos/pagination-query.dto';
 
 @ApiBearerAuth()
 @Controller('consultation')
@@ -74,29 +76,68 @@ export class ConsultationController {
   @Get('byUserId')
   async findOne(@Request() req) {
     const dataUser = req.user.id;
-    const result = await this.consultationService.findOne(dataUser)
+    const result = await this.consultationService.findOne(dataUser);
     return result;
   }
+
   @UseGuards(createRoleGuard(['consultant']))
   @Get('byConsultorId')
   async findByConsultorId(@Request() req) {
     const dataUser = req.user.id;
-    const result = await this.consultationService.findOneByIdConsultant(dataUser)
+    const result =
+      await this.consultationService.findOneByIdConsultant(dataUser);
     return result;
   }
 
-  @UseGuards(
-    createRoleGuard(['adm', 'user', 'consultant']),
-    OwnershipOrAdminGuard,
-  )
-  @Put(':id')
-  update(@Param('id') id: string, @Body() updateConsultationDto: UpdateConsultationDto) {
-    return this.consultationService.update(id, updateConsultationDto);
+  @UseGuards(createRoleGuard(['consultant']))
+  @Patch('consultor/:id')
+  updateByConsultant(
+    @Param('id') id: string,
+    @Body() updateConsultationDto: UpdateConsultationDto,
+    @Request() req,
+  ) {
+    return this.consultationService.updateStatusByConsultant(
+      id,
+      updateConsultationDto,
+      req.user.id,
+    );
   }
+
+  @UseGuards(createRoleGuard(['user']), OwnershipOrAdminGuard)
+  @Patch('customer/cancel/:id')
+  cancelByCustomer(@Param('id') id: string, @Request() req) {
+    return this.consultationService.cancelConsultationByCustomer(
+      id,
+      req.user.id,
+    );
+  }
+  @UseGuards(createRoleGuard(['user']))
+  @Get('byUserId/paginated')
+  async getConsultationsByUserIdPaginated(
+    @Request() req,
+    @Query() paginationQuery: PaginationQueryDto,
+  ) {
+    const userId = req.user.id;
+    const { page, limit } = paginationQuery;
+
+    const [consultations, totalCount] =
+      await this.consultationService.findConsultationsByUserIdPaginated(
+        userId,
+        page,
+        limit,
+      );
+    return {
+      data: consultations,
+      totalCount: totalCount,
+      currentPage: page,
+      limit: limit,
+      totalPages: Math.ceil(totalCount / limit),
+    };
+  }
+
   @UseGuards(createRoleGuard(['adm']))
   @Delete(':id')
-  remove(@Request() req) {
-    const dataUser = req.user.id;
-    return this.consultationService.remove(dataUser);
+  remove(@Param('id') id: string) {
+    return this.consultationService.remove(id);
   }
 }

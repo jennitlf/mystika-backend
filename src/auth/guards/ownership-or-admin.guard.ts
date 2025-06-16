@@ -38,7 +38,6 @@ export class OwnershipOrAdminGuard implements CanActivate {
       request.originalUrl.includes('/consultation') &&
       request.method === 'PUT'
     ) {
-      console.log('estou no parametro de entrada');
       const consultations =
         await this.consultationService.findByIdConsultation(id);
       if (

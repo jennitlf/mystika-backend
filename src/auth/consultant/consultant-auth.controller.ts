@@ -9,10 +9,10 @@ export class ConsultantAuthController {
   @Post('register')
   async register(@Req() req: Request, @Body() body: CreateConsultantDto) {
     const role = req.url.includes('consultant')
-    ? 'consultant'
-    : req.url.includes('customer')
-    ? 'user'
-    : 'adm';
+      ? 'consultant'
+      : req.url.includes('customer')
+        ? 'user'
+        : 'adm';
 
     const userDto = { ...body, role };
     return this.ConsultantAuthService.register(userDto);
@@ -20,7 +20,10 @@ export class ConsultantAuthController {
 
   @Post('login')
   async login(@Body() body: { email: string; password: string }) {
-    const user = await this.ConsultantAuthService.validateUser(body.email, body.password);
+    const user = await this.ConsultantAuthService.validateUser(
+      body.email,
+      body.password,
+    );
     if (!user) {
       throw new Error('Usuário ou senha incorreta');
     }
