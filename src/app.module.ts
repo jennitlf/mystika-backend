@@ -15,6 +15,7 @@ import { ConsultationModule } from './features/customer/consultation/consultatio
 import { ConsultantSupportModule } from './features/consultant/consultant-support/cosultant-support.module';
 import { CustomerSupportModule } from './features/customer/customer-support/customer-support.module';
 import { EmailModule } from './features/email/email.module';
+import { AwsS3Module } from './features/aws-s3/aws-s3.module';
 
 @Module({
   imports: [
@@ -34,6 +35,7 @@ import { EmailModule } from './features/email/email.module';
     CustomerSupportModule,
     ConsultantSupportModule,
     EmailModule,
+    AwsS3Module,
   ],
   controllers: [AppController],
   providers: [AppService],

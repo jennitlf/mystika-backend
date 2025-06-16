@@ -6,6 +6,8 @@ import { ConsultantModule } from 'src/features/consultant/consultant/consultant.
 import { Consultant } from 'src/shared/entities/consultant.entity';
 import { JwtModule } from '@nestjs/jwt';
 import { ConfigModule, ConfigService } from '@nestjs/config';
+import { AwsS3Service } from 'src/features/aws-s3/aws-s3.service';
+import { EmailModule } from 'src/features/email/email.module';
 
 @Module({
   imports: [TypeOrmModule.forFeature([Consultant]),
@@ -18,8 +20,9 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
     }),
   }),
   ConsultantModule,
+  EmailModule
   ],
   controllers: [ConsultantAuthController],
-  providers: [ConsultantAuthService],
+  providers: [ConsultantAuthService, AwsS3Service],
 })
 export class ConsultantAuthModule {}

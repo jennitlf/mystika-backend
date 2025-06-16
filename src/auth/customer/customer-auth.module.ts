@@ -1,4 +1,3 @@
-// customer-auth.module.ts
 import { Module } from '@nestjs/common';
 import { CustomerAuthController } from './customer-auth.controller';
 import { CustomerAuthService } from './customer-auth.service';
@@ -7,6 +6,9 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { Customer } from 'src/shared/entities/customer.entity';
 import { UserModule } from 'src/features/customer/user/user.module';
+import { AwsS3Service } from 'src/features/aws-s3/aws-s3.service';
+import { EmailService } from 'src/features/email/email.service';
+import { EmailModule } from 'src/features/email/email.module';
 
 @Module({
   imports: [
@@ -19,9 +21,10 @@ import { UserModule } from 'src/features/customer/user/user.module';
         signOptions: { expiresIn: '1h' },
       }),
     }),
-    UserModule
+    UserModule,
+    EmailModule
   ],
   controllers: [CustomerAuthController],
-  providers: [CustomerAuthService],
+  providers: [CustomerAuthService, AwsS3Service, EmailService],
 })
 export class CustomerAuthModule {}
