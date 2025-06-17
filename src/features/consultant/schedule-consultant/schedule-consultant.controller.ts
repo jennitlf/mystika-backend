@@ -8,6 +8,7 @@ import {
   Delete,
   Query,
   UseGuards,
+  UseInterceptors,
 } from '@nestjs/common';
 import { ScheduleConsultantService } from './schedule-consultant.service';
 import { CreateScheduleConsultantDto } from 'src/shared/dtos/create-schedule-consultant.dto';
@@ -15,6 +16,7 @@ import { ApiBearerAuth, ApiQuery } from '@nestjs/swagger';
 import { CreateScheduleRecurringDto } from 'src/shared/dtos/create-schedule-recurring.dto';
 import { createRoleGuard } from 'src/auth/factories/role-guard.factory';
 import { OwnershipScheduleConsultant } from 'src/auth/guards/ownership-schedule-consultant.guard';
+import { NoCacheInterceptor } from 'src/middlewares/no-cache.interceptor';
 
 @ApiBearerAuth()
 @Controller('schedule-consultant')
@@ -24,6 +26,7 @@ export class ScheduleConsultantController {
   ) {}
 
   @Get(':idConsultantSpecialty/timeslots')
+  @UseInterceptors(NoCacheInterceptor)
   @ApiQuery({
     name: 'date',
     required: false,
