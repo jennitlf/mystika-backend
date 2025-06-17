@@ -64,10 +64,6 @@ export class ScheduleConsultantService {
     const now = this.dateUtilsService.getZonedDate();
     now.setSeconds(0, 0);
 
-    // --- LOG PARA VERIFICAÇÃO INICIAL ---
-    console.log(`[DEBUG] getTimeslots - Chamado para idConsultantSpecialty: ${idConsultantSpecialty}, data: ${date}`);
-    console.log(`[DEBUG] getTimeslots - 'now' (data/hora atual): ${now.toISOString()}`);
-
     const schedules = await this.scheduleConsultantRepository.find({
       where: {
         id_consultant_specialty: idConsultantSpecialty,
@@ -76,18 +72,12 @@ export class ScheduleConsultantService {
       relations: ['scheduleException', 'consultantSpecialty'],
     });
 
-    console.log(`[DEBUG] getTimeslots - Schedules encontrados: ${schedules.length}`);
-
     const validSchedules = schedules.filter((schedule) => {
       const schDt = this.dateUtilsService.getZonedDate(
         new Date(schedule.date + 'T00:00:00'),
       );
-      // --- LOG PARA VALIDAÇÃO DE SCHEDULES ---
-      console.log(`[DEBUG] Validando schedule - ID: ${schedule.id}, Data schedule: ${schDt.toISOString()}, É >= now? ${schDt >= now}, É o mesmo dia que now? ${schDt.toDateString() === now.toDateString()}`);
       return schDt >= now || schDt.toDateString() === now.toDateString();
     });
-
-    console.log(`[DEBUG] getTimeslots - Schedules válidos após filtro: ${validSchedules.length}`);
 
     const timeslots = await Promise.all(
       validSchedules.map(async (schedule) => {
@@ -97,39 +87,31 @@ export class ScheduleConsultantService {
           date,
           scheduleException,
           consultantSpecialty,
-          id, // id do schedule_consultant
+          id,
         } = schedule;
 
         if (!consultantSpecialty) {
-          console.error(`[DEBUG] Erro: ConsultantSpecialty não encontrado para o schedule ID: ${id}`);
           throw new Error('ConsultantSpecialty não encontrado');
         }
 
         const { duration } = consultantSpecialty;
         const allTimes = this.generateTimes(hour_initial, hour_end, duration);
-        console.log(`[DEBUG] Schedule ID: ${id} - Horários gerados (allTimes): ${allTimes.join(', ')}`);
 
-        const relevantExceptions = scheduleException.filter(
-          (ex) => {
-            const exceptionDateISO = ex.date_exception.toISOString().split('T')[0];
-            const scheduleDateISO = this.dateUtilsService
-              .getZonedDate(new Date(date + 'T00:00:00'))
-              .toISOString()
-              .split('T')[0];
-            // --- LOG PARA EXCEÇÕES ---
-            console.log(`[DEBUG] Exceção - Schedule ID: ${id}, Data exceção: ${exceptionDateISO}, Data schedule: ${scheduleDateISO}, Match: ${exceptionDateISO === scheduleDateISO}`);
-            return exceptionDateISO === scheduleDateISO;
-          }
-        );
+        const relevantExceptions = scheduleException.filter((ex) => {
+          const exceptionDateISO = ex.date_exception.toISOString().split('T')[0];
+          const scheduleDateISO = this.dateUtilsService
+            .getZonedDate(new Date(date + 'T00:00:00'))
+            .toISOString()
+            .split('T')[0];
+          return exceptionDateISO === scheduleDateISO;
+        });
         const unavailableTimes = relevantExceptions.map((ex) =>
           this.formatTime(this.parseTime(ex.unavailable_time)),
         );
-        console.log(`[DEBUG] Schedule ID: ${id} - Horários indisponíveis por exceção: ${unavailableTimes.join(', ')}`);
 
         const availableTimes = allTimes.filter(
           (time) => !unavailableTimes.includes(time),
         );
-        console.log(`[DEBUG] Schedule ID: ${id} - Horários disponíveis após exceção: ${availableTimes.join(', ')}`);
 
         const schDate = this.dateUtilsService.getZonedDate(
           new Date(date + 'T00:00:00'),
@@ -138,9 +120,7 @@ export class ScheduleConsultantService {
           schDate.toDateString() === now.toDateString()
             ? availableTimes.filter((time) => this.parseTime(time) > now)
             : availableTimes;
-        console.log(`[DEBUG] Schedule ID: ${id} - Horários disponíveis após filtro de tempo (passado): ${filteredTimes.join(', ')}`);
 
-        // --- INÍCIO DOS LOGS CRÍTICOS PARA CONSULTATIONS ---
         const startOfDay = new Date(
           Date.UTC(schDate.getFullYear(), schDate.getMonth(), schDate.getDate(), 0, 0, 0),
         );
@@ -148,33 +128,20 @@ export class ScheduleConsultantService {
           Date.UTC(schDate.getFullYear(), schDate.getMonth(), schDate.getDate(), 23, 59, 59, 999),
         );
 
-        console.log('----------------------------------------------------');
-        console.log(`[DEBUG] BUSCA DE CONSULTAS AGENDADAS para Schedule ID: ${id}`);
-        console.log(`[DEBUG] Parâmetro 'id_schedule_consultant': ${id}`);
-        console.log(`[DEBUG] Parâmetro 'appoinment_date' - INÍCIO do dia (UTC): ${startOfDay.toISOString()}`);
-        console.log(`[DEBUG] Parâmetro 'appoinment_date' - FIM do dia (UTC): ${endOfDay.toISOString()}`);
-        console.log('----------------------------------------------------');
-
         const consultations = await this.consultationRepository.find({
           where: {
             id_schedule_consultant: id,
-            appoinment_date: Between(startOfDay, endOfDay),
+            appoinment_datetime: Between(startOfDay, endOfDay),
           },
         });
 
-        console.log(`[DEBUG] RESULTADO - Consultas encontradas: ${JSON.stringify(consultations)}`); // <-- MUITO IMPORTANTE!
-        
         const bookedTimes = consultations.map((consultation) =>
-          consultation.appoinment_time.slice(0, 5),
+          this.formatTime(this.dateUtilsService.getZonedDate(consultation.appoinment_datetime)),
         );
-        console.log(`[DEBUG] RESULTADO - Horários reservados (bookedTimes): ${bookedTimes.join(', ')}`);
 
         const availableTimesAfterBooking = filteredTimes.filter(
           (time) => !bookedTimes.includes(time),
         );
-        console.log(`[DEBUG] RESULTADO - Horários FINALMENTE disponíveis (availableTimesAfterBooking): ${availableTimesAfterBooking.join(', ')}`);
-        console.log('----------------------------------------------------');
-        // --- FIM DOS LOGS CRÍTICOS ---
 
         return {
           schedule_id: id,
@@ -226,7 +193,7 @@ export class ScheduleConsultantService {
           hour_end,
         },
       });
-    
+
       if (!scheduleExists) {
         schedules.push(
           this.scheduleConsultantRepository.create({

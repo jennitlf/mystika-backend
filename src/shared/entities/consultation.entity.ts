@@ -48,6 +48,13 @@ export class Consultation {
   appoinment_time: string;
 
   @Column({
+    name: 'appoinment_datetime',
+    type: 'timestamptz',
+    nullable: false,
+  })
+  appoinment_datetime: Date;
+
+  @Column({
     name: 'status',
     type: 'varchar',
     nullable: true,
