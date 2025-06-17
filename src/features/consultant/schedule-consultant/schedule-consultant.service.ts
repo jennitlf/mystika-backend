@@ -4,7 +4,7 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { Brackets, Raw, Repository } from 'typeorm';
+import { Brackets, Raw, Repository, Between } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
 import {
   ScheduleConsultant,
@@ -45,7 +45,6 @@ export class ScheduleConsultantService {
     duration: number,
   ): string[] {
     const times = [];
-    // eslint-disable-next-line prefer-const
     let currentTime = this.parseTime(start);
     const endTime = this.parseTime(end);
     while (currentTime.getTime() + duration * 60000 <= endTime.getTime()) {
@@ -119,14 +118,19 @@ export class ScheduleConsultantService {
             ? availableTimes.filter((time) => this.parseTime(time) > now)
             : availableTimes;
 
-        const scheduleDateISO = schDate.toISOString().split('T')[0];
+        // --- Correção aplicada aqui ---
+        const startOfDay = new Date(
+          Date.UTC(schDate.getFullYear(), schDate.getMonth(), schDate.getDate(), 0, 0, 0),
+        );
+        const endOfDay = new Date(
+          Date.UTC(schDate.getFullYear(), schDate.getMonth(), schDate.getDate(), 23, 59, 59, 999),
+        );
+        // --- Fim da correção ---
 
         const consultations = await this.consultationRepository.find({
           where: {
             id_schedule_consultant: id,
-            appoinment_date: Raw(
-              (alias) => `DATE(${alias}) = '${scheduleDateISO}'`,
-            ),
+            appoinment_date: Between(startOfDay, endOfDay), // Usando Between para a comparação de data
           },
         });
 
