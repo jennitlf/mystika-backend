@@ -7,14 +7,15 @@ import {
   Param,
   Delete,
   Query,
-  Put,
   HttpStatus,
   HttpCode,
+  UseGuards,
 } from '@nestjs/common';
 import { ConsultantSpecialtyService } from './consultant-specialty.service';
 import { CreateConsultantSpecialtyDto } from 'src/shared/dtos/create-consultant-specialty.dto';
 import { UpdateConsultantSpecialtyDto } from 'src/shared/dtos/update-consultant-specialty.dto';
 import { ApiQuery, ApiTags } from '@nestjs/swagger';
+import { createRoleGuard } from 'src/auth/factories/role-guard.factory';
 
 @ApiTags('consultant data in each specialty')
 @Controller('consultant-specialty')
@@ -23,6 +24,7 @@ export class ConsultantSpecialtyController {
     private readonly consultantSpecialtyService: ConsultantSpecialtyService,
   ) {}
 
+  @UseGuards(createRoleGuard(['consultant', 'adm']))
   @Post()
   create(@Body() createConsultantSpecialtyDto: CreateConsultantSpecialtyDto) {
     return this.consultantSpecialtyService.create(createConsultantSpecialtyDto);
@@ -72,7 +74,8 @@ export class ConsultantSpecialtyController {
     return this.consultantSpecialtyService.findOne(id);
   }
 
-  @Put(':id')
+  @UseGuards(createRoleGuard(['consultant', 'adm']))
+  @Patch(':id')
   update(
     @Param('id') id: string,
     @Body() updateConsultantSpecialtyDto: UpdateConsultantSpecialtyDto,
@@ -84,6 +87,7 @@ export class ConsultantSpecialtyController {
   }
 
   @HttpCode(HttpStatus.NO_CONTENT)
+  @UseGuards(createRoleGuard(['consultant', 'adm']))
   @Delete(':id')
   remove(@Param('id') id: string) {
     return this.consultantSpecialtyService.remove(id);

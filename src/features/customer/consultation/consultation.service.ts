@@ -288,7 +288,7 @@ export class ConsultationService {
     const consultations = await query.getMany();
 
     if (!consultations.length) {
-      throw new NotFoundException(`Consultations for user ID: ${id} not found`);
+      throw new HttpException(`Consultations for user ID: ${id} not found`, HttpStatus.NOT_FOUND)
     }
 
     const formattedData = consultations.map((consultation) => ({
@@ -371,9 +371,7 @@ export class ConsultationService {
     const consultations = await query.getMany();
 
     if (!consultations.length) {
-      throw new NotFoundException(
-        `Consultations for user ID: ${dataUser} not found`,
-      );
+      throw new HttpException(`Consultations for user ID: ${dataUser} not found`, HttpStatus.NO_CONTENT)
     }
 
     const formattedData = consultations.map((consultation) => ({
@@ -458,9 +456,7 @@ export class ConsultationService {
     const consultations = await query.getMany();
 
     if (!consultations.length) {
-      throw new NotFoundException(
-        `Consultations for user ID: ${dataUser} not found`,
-      );
+      throw new HttpException(`Consultations for user ID: ${dataUser} not found`, HttpStatus.NOT_FOUND)
     }
 
     const formattedData = consultations.map((consultation) => ({
@@ -513,9 +509,10 @@ export class ConsultationService {
       id: +consultationId,
     });
     if (!consultation) {
-      throw new NotFoundException(
-        `Consulta com ID ${consultationId} não encontrada.`,
-      );
+      // throw new NotFoundException(
+      //   `Consulta com ID ${consultationId} não encontrada.`,
+      // );
+      throw new HttpException(`Consultations for user ID: ${consultationId} not found`, HttpStatus.NOT_FOUND)
     }
     // Valida se o cliente logado é o dono da consulta
     if (consultation.id_customer !== customerId) {
@@ -619,9 +616,7 @@ export class ConsultationService {
     });
 
     if (!consultation) {
-      throw new NotFoundException(
-        `Consulta com ID ${consultationId} não encontrada.`,
-      );
+      throw new HttpException(`Consultations for user ID: ${consultationId} not found`, HttpStatus.NO_CONTENT)
     }
     const fullConsultationCheck = await this.consultationRepository
       .createQueryBuilder('consultation')

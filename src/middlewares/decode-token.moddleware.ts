@@ -18,7 +18,6 @@ export class DecodeTokenMiddleware implements NestMiddleware {
       throw new UnauthorizedException('Token não fornecido ou inválido');
     }
     const token = authHeader.split(' ')[1];
-
     try {
       const decoded = jwt.verify(token, process.env.JWT_SECRET);
       (req as RequestWithUser).user = decoded;
