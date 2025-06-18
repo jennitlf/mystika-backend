@@ -63,7 +63,7 @@ export class ScheduleConsultantService {
       : null;
     const now = this.dateUtilsService.getZonedDate();
     now.setSeconds(0, 0);
-
+  
     const schedules = await this.scheduleConsultantRepository.find({
       where: {
         id_consultant_specialty: idConsultantSpecialty,
@@ -71,14 +71,14 @@ export class ScheduleConsultantService {
       },
       relations: ['scheduleException', 'consultantSpecialty'],
     });
-
+  
     const validSchedules = schedules.filter((schedule) => {
       const schDt = this.dateUtilsService.getZonedDate(
         new Date(schedule.date + 'T00:00:00'),
       );
       return schDt >= now || schDt.toDateString() === now.toDateString();
     });
-
+  
     const timeslots = await Promise.all(
       validSchedules.map(async (schedule) => {
         const {
@@ -89,14 +89,14 @@ export class ScheduleConsultantService {
           consultantSpecialty,
           id,
         } = schedule;
-
+  
         if (!consultantSpecialty) {
           throw new Error('ConsultantSpecialty não encontrado');
         }
-
+  
         const { duration } = consultantSpecialty;
         const allTimes = this.generateTimes(hour_initial, hour_end, duration);
-
+  
         const relevantExceptions = scheduleException.filter((ex) => {
           const exceptionDateISO = ex.date_exception.toISOString().split('T')[0];
           const scheduleDateISO = this.dateUtilsService
@@ -108,11 +108,11 @@ export class ScheduleConsultantService {
         const unavailableTimes = relevantExceptions.map((ex) =>
           this.formatTime(this.parseTime(ex.unavailable_time)),
         );
-
+  
         const availableTimes = allTimes.filter(
           (time) => !unavailableTimes.includes(time),
         );
-
+  
         const schDate = this.dateUtilsService.getZonedDate(
           new Date(date + 'T00:00:00'),
         );
@@ -120,29 +120,38 @@ export class ScheduleConsultantService {
           schDate.toDateString() === now.toDateString()
             ? availableTimes.filter((time) => this.parseTime(time) > now)
             : availableTimes;
-
+  
         const startOfDay = new Date(
           Date.UTC(schDate.getFullYear(), schDate.getMonth(), schDate.getDate(), 0, 0, 0),
         );
         const endOfDay = new Date(
           Date.UTC(schDate.getFullYear(), schDate.getMonth(), schDate.getDate(), 23, 59, 59, 999),
         );
-
+  
+        console.log('Antes da consulta ao consultationRepository');
+  
         const consultations = await this.consultationRepository.find({
           where: {
             id_schedule_consultant: id,
             appoinment_datetime: Between(startOfDay, endOfDay),
           },
         });
-
+  
+        console.log('Após a consulta ao consultationRepository:', consultations);
+  
         const bookedTimes = consultations.map((consultation) =>
           this.formatTime(this.dateUtilsService.getZonedDate(consultation.appoinment_datetime)),
         );
-
+  
+        console.log('Horários agendados (bookedTimes):', bookedTimes);
+  
         const availableTimesAfterBooking = filteredTimes.filter(
           (time) => !bookedTimes.includes(time),
         );
-
+  
+         console.log('Horários disponíveis antes da filtragem:', filteredTimes);
+         console.log('Horários disponíveis após a filtragem (availableTimesAfterBooking):', availableTimesAfterBooking);
+  
         return {
           schedule_id: id,
           date,
@@ -150,7 +159,7 @@ export class ScheduleConsultantService {
         };
       }),
     );
-
+  
     return timeslots;
   }
 
