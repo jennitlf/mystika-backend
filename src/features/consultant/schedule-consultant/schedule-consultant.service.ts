@@ -4,7 +4,7 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { Brackets, Raw, Repository } from 'typeorm';
+import { Brackets, Raw, Repository, Between } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
 import {
   ScheduleConsultant,
@@ -45,7 +45,6 @@ export class ScheduleConsultantService {
     duration: number,
   ): string[] {
     const times = [];
-    // eslint-disable-next-line prefer-const
     let currentTime = this.parseTime(start);
     const endTime = this.parseTime(end);
     while (currentTime.getTime() + duration * 60000 <= endTime.getTime()) {
@@ -65,6 +64,7 @@ export class ScheduleConsultantService {
     const now = this.dateUtilsService.getZonedDate();
     now.setSeconds(0, 0);
     console.log('Current Date:', now.toISOString());
+
     const schedules = await this.scheduleConsultantRepository.find({
       where: {
         id_consultant_specialty: idConsultantSpecialty,
@@ -72,14 +72,14 @@ export class ScheduleConsultantService {
       },
       relations: ['scheduleException', 'consultantSpecialty'],
     });
-
+  
     const validSchedules = schedules.filter((schedule) => {
       const schDt = this.dateUtilsService.getZonedDate(
         new Date(schedule.date + 'T00:00:00'),
       );
       return schDt >= now || schDt.toDateString() === now.toDateString();
     });
-
+  
     const timeslots = await Promise.all(
       validSchedules.map(async (schedule) => {
         const {
@@ -90,27 +90,30 @@ export class ScheduleConsultantService {
           consultantSpecialty,
           id,
         } = schedule;
+  
         if (!consultantSpecialty) {
           throw new Error('ConsultantSpecialty não encontrado');
         }
+  
         const { duration } = consultantSpecialty;
         const allTimes = this.generateTimes(hour_initial, hour_end, duration);
-
-        const relevantExceptions = scheduleException.filter(
-          (ex) =>
-            ex.date_exception.toISOString().split('T')[0] ===
-            this.dateUtilsService
-              .getZonedDate(new Date(date + 'T00:00:00'))
-              .toISOString()
-              .split('T')[0],
-        );
+  
+        const relevantExceptions = scheduleException.filter((ex) => {
+          const exceptionDateISO = ex.date_exception.toISOString().split('T')[0];
+          const scheduleDateISO = this.dateUtilsService
+            .getZonedDate(new Date(date + 'T00:00:00'))
+            .toISOString()
+            .split('T')[0];
+          return exceptionDateISO === scheduleDateISO;
+        });
         const unavailableTimes = relevantExceptions.map((ex) =>
           this.formatTime(this.parseTime(ex.unavailable_time)),
         );
+  
         const availableTimes = allTimes.filter(
           (time) => !unavailableTimes.includes(time),
         );
-
+  
         const schDate = this.dateUtilsService.getZonedDate(
           new Date(date + 'T00:00:00'),
         );
@@ -121,6 +124,7 @@ export class ScheduleConsultantService {
 
         const scheduleDateISO = schDate.toISOString().split('T')[0];
         console.log(scheduleDateISO)
+
         const consultations = await this.consultationRepository.find({
           where: {
             id_schedule_consultant: id,
@@ -132,11 +136,13 @@ export class ScheduleConsultantService {
         const bookedTimes = consultations.map((consultation) => 
           consultation.appoinment_time.slice(0, 5),
         );
-
+  
+        console.log('Horários agendados (bookedTimes):', bookedTimes);
+  
         const availableTimesAfterBooking = filteredTimes.filter(
           (time) => !bookedTimes.includes(time),
         );
-        console.log('Available Times After Booking:', availableTimesAfterBooking);
+        console.log('Available Times After Booking:', availableTimesAfterBooking)
         return {
           schedule_id: id,
           date,
@@ -144,7 +150,7 @@ export class ScheduleConsultantService {
         };
       }),
     );
-
+  
     return timeslots;
   }
 
@@ -187,7 +193,7 @@ export class ScheduleConsultantService {
           hour_end,
         },
       });
-    
+
       if (!scheduleExists) {
         schedules.push(
           this.scheduleConsultantRepository.create({
