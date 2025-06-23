@@ -133,6 +133,11 @@ export class ScheduleConsultantService {
             ),
           },
         });
+        consultations.map((consultation) => {
+          console.log(
+            `Consultation ID: ${consultation.id}, Date: ${consultation.appoinment_date}, Time: ${consultation.appoinment_time}`,  
+          );
+        })
         const bookedTimes = consultations.map((consultation) => 
           consultation.appoinment_time.slice(0, 5),
         );
