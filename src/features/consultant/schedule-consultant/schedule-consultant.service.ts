@@ -64,7 +64,7 @@ export class ScheduleConsultantService {
       : null;
     const now = this.dateUtilsService.getZonedDate();
     now.setSeconds(0, 0);
-
+    console.log('Current Date:', now.toISOString());
     const schedules = await this.scheduleConsultantRepository.find({
       where: {
         id_consultant_specialty: idConsultantSpecialty,
@@ -120,7 +120,7 @@ export class ScheduleConsultantService {
             : availableTimes;
 
         const scheduleDateISO = schDate.toISOString().split('T')[0];
-
+        console.log(scheduleDateISO)
         const consultations = await this.consultationRepository.find({
           where: {
             id_schedule_consultant: id,
@@ -129,15 +129,14 @@ export class ScheduleConsultantService {
             ),
           },
         });
-
-        const bookedTimes = consultations.map((consultation) =>
+        const bookedTimes = consultations.map((consultation) => 
           consultation.appoinment_time.slice(0, 5),
         );
 
         const availableTimesAfterBooking = filteredTimes.filter(
           (time) => !bookedTimes.includes(time),
         );
-
+        console.log('Available Times After Booking:', availableTimesAfterBooking);
         return {
           schedule_id: id,
           date,
