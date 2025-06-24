@@ -25,4 +25,5 @@ export const AppDataSource = new DataSource({
   migrations: [__dirname + '/../shared/migrations/*{.ts,.js}'],
   synchronize: false,
   logging: ['query', 'error'],
+  logger: 'advanced-console',
 });
