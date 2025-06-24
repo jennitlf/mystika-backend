@@ -16,6 +16,7 @@ import { Consultation } from 'src/shared/entities/consultation.entity';
 
 @Injectable()
 export class ScheduleConsultantService {
+  cacheService: any;
   constructor(
     @InjectRepository(ScheduleConsultant)
     private readonly scheduleConsultantRepository: Repository<ScheduleConsultant>,
@@ -133,11 +134,12 @@ export class ScheduleConsultantService {
             ),
           },
         });
-        consultations.map((consultation) => {
+        await this.cacheService.invalidateTimeslotsCache(consultations);
+        await Promise.all(consultations.map(async (consultation) => {
           console.log(
             `Consultation ID: ${consultation.id}, Date: ${consultation.appoinment_date}, Time: ${consultation.appoinment_time}`,  
           );
-        })
+        }));
         const bookedTimes = consultations.map((consultation) => 
           consultation.appoinment_time.slice(0, 5),
         );
