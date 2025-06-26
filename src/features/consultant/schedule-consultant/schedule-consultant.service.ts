@@ -31,13 +31,16 @@ export class ScheduleConsultantService {
     const [hours, minutes] = time.split(':').map(Number);
     const date = new Date(baseDate);
     date.setHours(hours, minutes, 0, 0);
+    console.log(`Parsed time ${time} into date: ${date}`);
     return date;
   }
   
   private formatTime(date: Date): string {
     const hours = date.getHours().toString().padStart(2, '0');
     const minutes = date.getMinutes().toString().padStart(2, '0');
-    return `${hours}:${minutes}`;
+    const formatted = `${hours}:${minutes}`;
+    console.log(`Formatted date ${date} into time: ${formatted}`);
+    return formatted;
   }
   
   private generateTimes(start: Date, end: Date, duration: number): Date[] {
@@ -47,6 +50,7 @@ export class ScheduleConsultantService {
       times.push(new Date(currentTime));
       currentTime.setMinutes(currentTime.getMinutes() + duration);
     }
+    console.log(`Generated times from ${start} to ${end} with duration ${duration}:`, times);
     return times;
   }
   
@@ -55,9 +59,12 @@ export class ScheduleConsultantService {
     timeZone: string,
     date?: string | null,
   ): Promise<ScheduleAvailabilityDto[]> {
+    console.log(`getTimeslots called with idConsultantSpecialty: ${idConsultantSpecialty}, timeZone: ${timeZone}, date: ${date}`);
   
     const now = this.dateUtilsService.getZonedDate(new Date(), timeZone);
+    console.log(`Current time in client's timezone (${timeZone}): ${now}`);
     const startOfToday = this.dateUtilsService.getStartOfDayInZone(now, timeZone);
+    console.log(`Start of today in client's timezone: ${startOfToday}`);
   
     const schedules = await this.scheduleConsultantRepository.find({
       where: {
@@ -66,6 +73,7 @@ export class ScheduleConsultantService {
       },
       relations: ['scheduleException', 'consultation', 'consultantSpecialty'],
     });
+    console.log('Fetched schedules:', schedules);
   
     return schedules
       .filter((schedule) => {
@@ -73,6 +81,7 @@ export class ScheduleConsultantService {
           new Date(schedule.date_time_initial),
           timeZone,
         );
+        console.log(`Filtering schedule: ${schedule.id}. Schedule date in client zone: ${scheduleDate}. Comparing with start of today: ${startOfToday}`);
         return scheduleDate >= startOfToday;
       })
       .map((schedule) => {
@@ -84,12 +93,14 @@ export class ScheduleConsultantService {
           new Date(schedule.date_time_end),
           timeZone,
         );
+        console.log(`Schedule ID: ${schedule.id}. Initial time: ${date_time_initial}, End time: ${date_time_end}`);
   
         let availableTimes = this.generateTimes(
           date_time_initial,
           date_time_end,
           schedule.consultantSpecialty.duration,
         );
+        console.log(`Available times after generation for schedule ${schedule.id}:`, availableTimes.map(t => this.formatTime(t)));
   
         const unavailableExceptionTimes = schedule.scheduleException
           .map((ex) => {
@@ -97,18 +108,31 @@ export class ScheduleConsultantService {
               new Date(ex.unavailable_date_time),
               timeZone,
             );
-            return exceptionDateTimeInClientZone.toDateString() === date_time_initial.toDateString()
+            const formattedExceptionTime = exceptionDateTimeInClientZone.toDateString() === date_time_initial.toDateString()
               ? this.formatTime(exceptionDateTimeInClientZone)
               : null;
+            console.log(`Exception: ${ex.id}. Exception time in client zone: ${exceptionDateTimeInClientZone}. Formatted: ${formattedExceptionTime}`);
+            return formattedExceptionTime;
           })
           .filter((time) => time !== null);
+        console.log(`Unavailable exception times for schedule ${schedule.id}:`, unavailableExceptionTimes);
   
         availableTimes = availableTimes.filter(
-          (time) => !unavailableExceptionTimes.includes(this.formatTime(time)),
+          (time) => {
+            const isAvailable = !unavailableExceptionTimes.includes(this.formatTime(time));
+            console.log(`Filtering time ${this.formatTime(time)} against exceptions. Is available: ${isAvailable}`);
+            return isAvailable;
+          },
         );
+        console.log(`Available times after filtering exceptions for schedule ${schedule.id}:`, availableTimes.map(t => this.formatTime(t)));
   
         if (date_time_initial.toDateString() === now.toDateString()) {
-          availableTimes = availableTimes.filter((time) => time > now);
+          availableTimes = availableTimes.filter((time) => {
+            const isAfterNow = time > now;
+            console.log(`Filtering time ${this.formatTime(time)} against current time (${this.formatTime(now)}). Is after now: ${isAfterNow}`);
+            return isAfterNow;
+          });
+          console.log(`Available times after filtering past times for current day for schedule ${schedule.id}:`, availableTimes.map(t => this.formatTime(t)));
         }
   
         const bookedTimes = schedule.consultation
@@ -117,15 +141,23 @@ export class ScheduleConsultantService {
               new Date(c.appoinment_date_time),
               timeZone,
             );
-            return consultationDateTimeInClientZone.toDateString() === date_time_initial.toDateString()
+            const formattedBookedTime = consultationDateTimeInClientZone.toDateString() === date_time_initial.toDateString()
               ? this.formatTime(consultationDateTimeInClientZone)
               : null;
+            console.log(`Consultation: ${c.id}. Consultation time in client zone: ${consultationDateTimeInClientZone}. Formatted: ${formattedBookedTime}`);
+            return formattedBookedTime;
           })
           .filter((time) => time !== null);
+        console.log(`Booked times for schedule ${schedule.id}:`, bookedTimes);
   
         availableTimes = availableTimes.filter(
-          (time) => !bookedTimes.includes(this.formatTime(time)),
+          (time) => {
+            const isAvailable = !bookedTimes.includes(this.formatTime(time));
+            console.log(`Filtering time ${this.formatTime(time)} against booked times. Is available: ${isAvailable}`);
+            return isAvailable;
+          },
         );
+        console.log(`Final available times for schedule ${schedule.id}:`, availableTimes.map(t => this.formatTime(t)));
   
         return {
           date: date_time_initial,
@@ -137,6 +169,7 @@ export class ScheduleConsultantService {
   
 
   async createRecurring(createRecurringScheduleDto: any, timeZone: string) {
+    console.log('createRecurring called with:', createRecurringScheduleDto, 'timeZone:', timeZone);
     const {
       id_consultant_specialty,
       start_date,
@@ -148,6 +181,7 @@ export class ScheduleConsultantService {
   
     const startDate = new Date(start_date);
     const endDate = new Date(end_date);
+    console.log(`Provided start date: ${startDate}, end date: ${endDate}`);
   
     const diffInMs = endDate.getTime() - startDate.getTime();
     const diffInDays = diffInMs / (1000 * 60 * 60 * 24);
@@ -162,12 +196,16 @@ export class ScheduleConsultantService {
 
     for (let date = new Date(startDate); date <= endDate; date.setDate(date.getDate() + 1)) {
       const dateISO = date.toISOString().split('T')[0];
+      console.log(`Processing date: ${dateISO}`);
   
       const localStartDateTimeString = `${dateISO}T${hour_initial}`;
       const localEndDateTimeString = `${dateISO}T${hour_end}`;
+      console.log(`Local start datetime string: ${localStartDateTimeString}, Local end datetime string: ${localEndDateTimeString}`);
   
       const date_time_initial_obj = toZonedTime(localStartDateTimeString, timeZone);
       const date_time_end_obj = toZonedTime(localEndDateTimeString, timeZone);
+      console.log(`Converted start time (for storage): ${date_time_initial_obj.toISOString()}`);
+      console.log(`Converted end time (for storage): ${date_time_end_obj.toISOString()}`);
   
       const overlappingSchedule = await this.scheduleConsultantRepository.findOne({
         where: {
@@ -176,6 +214,7 @@ export class ScheduleConsultantService {
           date_time_end: MoreThanOrEqual(date_time_initial_obj),
         },
       });
+      console.log(`Checking for overlapping schedule for ${dateISO}. Overlapping schedule found:`, overlappingSchedule ? overlappingSchedule.id : 'None');
   
       if (!overlappingSchedule) {
         schedules.push(
@@ -189,15 +228,18 @@ export class ScheduleConsultantService {
             status,
           }),
         );
+        console.log(`Added new schedule for ${dateISO}.`);
       } else {
         console.log(`Skipped schedule for ${dateISO} due to overlap.`);
       }
     }
   
     if (schedules.length > 0) {
+      console.log(`Saving ${schedules.length} new schedules.`);
       return this.scheduleConsultantRepository.save(schedules);
     }
   
+    console.log('No new schedules were created due to existing overlaps.');
     throw new HttpException(
       'No new schedules were created; overlapping schedules exist.',
       HttpStatus.CONFLICT,
@@ -206,15 +248,17 @@ export class ScheduleConsultantService {
     
 
   async remove(id: string) {
+    console.log(`Removing schedule consultant with ID: ${id}`);
     const schedule_consultant = await this.scheduleConsultantRepository.findOne(
       {
         where: { id: +id },
       },
     );
     if (!schedule_consultant) {
+      console.log(`Schedule consultant with ID: ${id} not found.`);
       throw new NotFoundException(`schedule consultant id: ${id} not found`);
     }
-
+    console.log(`Found schedule consultant to remove:`, schedule_consultant);
     return this.scheduleConsultantRepository.remove(schedule_consultant);
   }
 }
