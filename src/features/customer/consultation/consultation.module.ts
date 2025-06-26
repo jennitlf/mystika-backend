@@ -8,6 +8,7 @@ import { Customer } from 'src/shared/entities/customer.entity';
 import { DecodeTokenMiddleware } from 'src/middlewares/decode-token.moddleware';
 import { CustomerSupportModule } from '../customer-support/customer-support.module';
 import { EmailService } from 'src/features/email/email.service';
+import { DateUtilsService } from 'src/shared/utils/date.utils';
 
 @Module({
   imports: [
@@ -15,7 +16,7 @@ import { EmailService } from 'src/features/email/email.service';
     TypeOrmModule.forFeature([Consultation, ConsultantSpecialty, Customer]),
   ],
   controllers: [ConsultationController],
-  providers: [ConsultationService, EmailService],
+  providers: [ConsultationService, EmailService, DateUtilsService],
   exports: [ConsultationService],
 })
 export class ConsultationModule {

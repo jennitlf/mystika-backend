@@ -8,11 +8,13 @@ import {
   Delete,
   Query,
   UseGuards,
+  Request
 } from '@nestjs/common';
 import { ScheduleExceptionService } from './schedule-exception.service';
 import CreateScheduleExceptionDto from 'src/shared/dtos/create-schedule-exception.dto';
 import { ApiBearerAuth, ApiQuery } from '@nestjs/swagger';
 import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
+import { createRoleGuard } from 'src/auth/factories/role-guard.factory';
 
 @ApiBearerAuth()
 @Controller('schedule-exception')
@@ -21,10 +23,13 @@ export class ScheduleExceptionController {
     private readonly scheduleExceptionService: ScheduleExceptionService,
   ) {}
 
-  @UseGuards(JwtAuthGuard)
-  @Post()
-  create(@Body() createScheduleExceptionDto: CreateScheduleExceptionDto) {
-    return this.scheduleExceptionService.create(createScheduleExceptionDto);
+  @UseGuards(createRoleGuard(['consultant']))
+  @Post('/:timeZone')
+  create(
+    @Param('timeZone') timeZone: string,
+    @Body() createScheduleExceptionDto: CreateScheduleExceptionDto
+  ) {
+    return this.scheduleExceptionService.create( decodeURIComponent(timeZone), createScheduleExceptionDto);
   }
 
   @Get()
@@ -38,23 +43,9 @@ export class ScheduleExceptionController {
     return this.scheduleExceptionService.findAll({ idScheduleConsultant });
   }
 
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.scheduleExceptionService.findOne(+id);
-  }
-
-  @UseGuards(JwtAuthGuard)
-  @Patch(':id')
-  update(@Param('id') id: string, @Body() updateScheduleExceptionDto: any) {
-    return this.scheduleExceptionService.update(
-      +id,
-      updateScheduleExceptionDto,
-    );
-  }
-
-  @UseGuards(JwtAuthGuard)
-  @Delete(':id')
-  remove(@Param('id') id: string) {
+  @UseGuards(createRoleGuard(['consultant']))
+  @Delete()
+  remove(@Body() id: string) {
     return this.scheduleExceptionService.remove(+id);
   }
 }

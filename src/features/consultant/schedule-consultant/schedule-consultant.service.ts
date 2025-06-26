@@ -4,7 +4,7 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { Brackets, Raw, Repository, Between } from 'typeorm';
+import {  Repository, Equal, LessThanOrEqual, MoreThanOrEqual } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
 import {
   ScheduleConsultant,
@@ -13,6 +13,7 @@ import {
 import { ScheduleException } from 'src/shared/entities/schedule_exception.entity';
 import { DateUtilsService } from '../../../shared/utils/date.utils';
 import { Consultation } from 'src/shared/entities/consultation.entity';
+import { toZonedTime } from 'date-fns-tz';
 
 @Injectable()
 export class ScheduleConsultantService {
@@ -26,140 +27,116 @@ export class ScheduleConsultantService {
     private readonly dateUtilsService: DateUtilsService,
   ) {}
 
-  private parseTime(time: string): Date {
+  private parseTime(time: string, baseDate: Date): Date {
     const [hours, minutes] = time.split(':').map(Number);
-    const date = this.dateUtilsService.getZonedDate();
+    const date = new Date(baseDate);
     date.setHours(hours, minutes, 0, 0);
     return date;
   }
-
+  
   private formatTime(date: Date): string {
     const hours = date.getHours().toString().padStart(2, '0');
     const minutes = date.getMinutes().toString().padStart(2, '0');
     return `${hours}:${minutes}`;
   }
-
-  private generateTimes(
-    start: string,
-    end: string,
-    duration: number,
-  ): string[] {
-    const times = [];
-    let currentTime = this.parseTime(start);
-    const endTime = this.parseTime(end);
-    while (currentTime.getTime() + duration * 60000 <= endTime.getTime()) {
-      times.push(this.formatTime(currentTime));
+  
+  private generateTimes(start: Date, end: Date, duration: number): Date[] {
+    const times: Date[] = [];
+    const currentTime = new Date(start);
+    while (currentTime.getTime() + duration * 60000 <= end.getTime()) {
+      times.push(new Date(currentTime));
       currentTime.setMinutes(currentTime.getMinutes() + duration);
     }
     return times;
   }
-
+  
   async getTimeslots(
     idConsultantSpecialty: number,
-    date: string | null,
+    timeZone: string,
+    date?: string | null,
   ): Promise<ScheduleAvailabilityDto[]> {
-    const scheduleDate = date
-      ? this.dateUtilsService.getZonedDate(new Date(date + 'T00:00:00'))
-      : null;
-    const now = this.dateUtilsService.getZonedDate();
-    now.setSeconds(0, 0);
-    console.log('Current Date:', now.toISOString());
-
+  
+    const now = this.dateUtilsService.getZonedDate(new Date(), timeZone);
+    const startOfToday = this.dateUtilsService.getStartOfDayInZone(now, timeZone);
+  
     const schedules = await this.scheduleConsultantRepository.find({
       where: {
         id_consultant_specialty: idConsultantSpecialty,
-        ...(scheduleDate && { date: scheduleDate }),
+        ...(date && { date: Equal(new Date(date)) }),
       },
-      relations: ['scheduleException', 'consultantSpecialty'],
+      relations: ['scheduleException', 'consultation', 'consultantSpecialty'],
     });
   
-    const validSchedules = schedules.filter((schedule) => {
-      const schDt = this.dateUtilsService.getZonedDate(
-        new Date(schedule.date + 'T00:00:00'),
-      );
-      return schDt >= now || schDt.toDateString() === now.toDateString();
-    });
+    return schedules
+      .filter((schedule) => {
+        const scheduleDate = this.dateUtilsService.getZonedDate(
+          new Date(schedule.date_time_initial),
+          timeZone,
+        );
+        return scheduleDate >= startOfToday;
+      })
+      .map((schedule) => {
+        const date_time_initial = this.dateUtilsService.getZonedDate(
+          new Date(schedule.date_time_initial),
+          timeZone,
+        );
+        const date_time_end = this.dateUtilsService.getZonedDate(
+          new Date(schedule.date_time_end),
+          timeZone,
+        );
   
-    const timeslots = await Promise.all(
-      validSchedules.map(async (schedule) => {
-        const {
-          hour_initial,
-          hour_end,
-          date,
-          scheduleException,
-          consultantSpecialty,
-          id,
-        } = schedule;
+        let availableTimes = this.generateTimes(
+          date_time_initial,
+          date_time_end,
+          schedule.consultantSpecialty.duration,
+        );
   
-        if (!consultantSpecialty) {
-          throw new Error('ConsultantSpecialty não encontrado');
+        const unavailableExceptionTimes = schedule.scheduleException
+          .map((ex) => {
+            const exceptionDateTimeInClientZone = this.dateUtilsService.getZonedDate(
+              new Date(ex.unavailable_date_time),
+              timeZone,
+            );
+            return exceptionDateTimeInClientZone.toDateString() === date_time_initial.toDateString()
+              ? this.formatTime(exceptionDateTimeInClientZone)
+              : null;
+          })
+          .filter((time) => time !== null);
+  
+        availableTimes = availableTimes.filter(
+          (time) => !unavailableExceptionTimes.includes(this.formatTime(time)),
+        );
+  
+        if (date_time_initial.toDateString() === now.toDateString()) {
+          availableTimes = availableTimes.filter((time) => time > now);
         }
   
-        const { duration } = consultantSpecialty;
-        const allTimes = this.generateTimes(hour_initial, hour_end, duration);
+        const bookedTimes = schedule.consultation
+          .map((c) => {
+            const consultationDateTimeInClientZone = this.dateUtilsService.getZonedDate(
+              new Date(c.appoinment_date_time),
+              timeZone,
+            );
+            return consultationDateTimeInClientZone.toDateString() === date_time_initial.toDateString()
+              ? this.formatTime(consultationDateTimeInClientZone)
+              : null;
+          })
+          .filter((time) => time !== null);
   
-        const relevantExceptions = scheduleException.filter((ex) => {
-          const exceptionDateISO = ex.date_exception.toISOString().split('T')[0];
-          const scheduleDateISO = this.dateUtilsService
-            .getZonedDate(new Date(date + 'T00:00:00'))
-            .toISOString()
-            .split('T')[0];
-          return exceptionDateISO === scheduleDateISO;
-        });
-        const unavailableTimes = relevantExceptions.map((ex) =>
-          this.formatTime(this.parseTime(ex.unavailable_time)),
+        availableTimes = availableTimes.filter(
+          (time) => !bookedTimes.includes(this.formatTime(time)),
         );
   
-        const availableTimes = allTimes.filter(
-          (time) => !unavailableTimes.includes(time),
-        );
-  
-        const schDate = this.dateUtilsService.getZonedDate(
-          new Date(date + 'T00:00:00'),
-        );
-        const filteredTimes =
-          schDate.toDateString() === now.toDateString()
-            ? availableTimes.filter((time) => this.parseTime(time) > now)
-            : availableTimes;
-
-        const scheduleDateISO = schDate.toISOString().split('T')[0];
-        console.log(scheduleDateISO)
-
-        const consultations = await this.consultationRepository.find({
-          where: {
-            id_schedule_consultant: id,
-            appoinment_date: Raw(
-              (alias) => `DATE(${alias}) = '${scheduleDateISO}'`,
-            ),
-          },
-        });
-        await Promise.all(consultations.map(async (consultation) => {
-          console.log(
-            `Consultation ID: ${consultation.id}, Date: ${consultation.appoinment_date}, Time: ${consultation.appoinment_time}`,  
-          );
-        }));
-        const bookedTimes = consultations.map((consultation) => 
-          consultation.appoinment_time.slice(0, 5),
-        );
-  
-        console.log('Horários agendados (bookedTimes):', bookedTimes);
-  
-        const availableTimesAfterBooking = filteredTimes.filter(
-          (time) => !bookedTimes.includes(time),
-        );
-        console.log('Available Times After Booking:', availableTimesAfterBooking)
         return {
-          schedule_id: id,
-          date,
-          available_times: availableTimesAfterBooking,
+          date: date_time_initial,
+          available_times: availableTimes.map((time) => this.formatTime(time)),
+          schedule_id: schedule.id,
         };
-      }),
-    );
-  
-    return timeslots;
+      });
   }
+  
 
-  async createRecurring(createRecurringScheduleDto: any) {
+  async createRecurring(createRecurringScheduleDto: any, timeZone: string) {
     const {
       id_consultant_specialty,
       start_date,
@@ -168,10 +145,10 @@ export class ScheduleConsultantService {
       hour_end,
       status,
     } = createRecurringScheduleDto;
-
-    const startDate = this.dateUtilsService.getZonedDate(new Date(start_date));
-    const endDate = this.dateUtilsService.getZonedDate(new Date(end_date));
-
+  
+    const startDate = new Date(start_date);
+    const endDate = new Date(end_date);
+  
     const diffInMs = endDate.getTime() - startDate.getTime();
     const diffInDays = diffInMs / (1000 * 60 * 60 * 24);
     if (diffInDays > 90) {
@@ -180,77 +157,53 @@ export class ScheduleConsultantService {
         HttpStatus.BAD_REQUEST,
       );
     }
+  
     const schedules = [];
 
-    for (
-      let date = new Date(startDate);
-      date <= endDate;
-      date.setDate(date.getDate() + 1)
-    ) {
-      const scheduleDate = this.dateUtilsService.getZonedDate(
-        new Date(date.toISOString().split('T')[0] + 'T00:00:00'),
-      );
-      const scheduleExists = await this.scheduleConsultantRepository.findOne({
+    for (let date = new Date(startDate); date <= endDate; date.setDate(date.getDate() + 1)) {
+      const dateISO = date.toISOString().split('T')[0];
+  
+      const localStartDateTimeString = `${dateISO}T${hour_initial}`;
+      const localEndDateTimeString = `${dateISO}T${hour_end}`;
+  
+      const date_time_initial_obj = toZonedTime(localStartDateTimeString, timeZone);
+      const date_time_end_obj = toZonedTime(localEndDateTimeString, timeZone);
+  
+      const overlappingSchedule = await this.scheduleConsultantRepository.findOne({
         where: {
           id_consultant_specialty,
-          date: scheduleDate,
-          hour_initial,
-          hour_end,
+          date_time_initial: LessThanOrEqual(date_time_end_obj),
+          date_time_end: MoreThanOrEqual(date_time_initial_obj),
         },
       });
-
-      if (!scheduleExists) {
+  
+      if (!overlappingSchedule) {
         schedules.push(
           this.scheduleConsultantRepository.create({
             id_consultant_specialty,
-            date: date.toISOString().split('T')[0],
+            date: dateISO,
             hour_initial,
             hour_end,
+            date_time_initial: date_time_initial_obj.toISOString(),
+            date_time_end: date_time_end_obj.toISOString(),
             status,
           }),
         );
+      } else {
+        console.log(`Skipped schedule for ${dateISO} due to overlap.`);
       }
     }
-
+  
     if (schedules.length > 0) {
       return this.scheduleConsultantRepository.save(schedules);
     }
-
+  
     throw new HttpException(
-      'No new schedules were created; all dates already exist.',
+      'No new schedules were created; overlapping schedules exist.',
       HttpStatus.CONFLICT,
     );
   }
-
-  async create(createScheduleConsultant: any) {
-    const { id_consultant_specialty, date, hour_initial, hour_end } =
-      createScheduleConsultant;
-    const verification = await this.scheduleConsultantRepository
-      .createQueryBuilder('schedule')
-      .where('schedule.id_consultant_specialty = :id_consultant_specialty', {
-        id_consultant_specialty,
-      })
-      .andWhere('schedule.date = :date', { date })
-      .andWhere(
-        new Brackets((qb) => {
-          qb.where('schedule.hour_initial = :hour_initial', {
-            hour_initial,
-          }).orWhere('schedule.hour_end = :hour_end', { hour_end });
-        }),
-      )
-      .getOne();
-
-    if (verification) {
-      throw new HttpException(
-        'Service already registered, enter a different day or time',
-        HttpStatus.CONFLICT,
-      );
-    }
-    const schedule_consultant = this.scheduleConsultantRepository.create(
-      createScheduleConsultant,
-    );
-    return this.scheduleConsultantRepository.save(schedule_consultant);
-  }
+    
 
   async remove(id: string) {
     const schedule_consultant = await this.scheduleConsultantRepository.findOne(

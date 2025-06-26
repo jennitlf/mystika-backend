@@ -11,6 +11,8 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Consultation } from 'src/shared/entities/consultation.entity';
 import { Repository } from 'typeorm';
 import { EmailService } from 'src/features/email/email.service';
+import { DateUtilsService } from 'src/shared/utils/date.utils';
+import { toZonedTime } from 'date-fns-tz';
 
 @Injectable()
 export class ConsultationService {
@@ -18,11 +20,22 @@ export class ConsultationService {
     @InjectRepository(Consultation)
     private readonly consultationRepository: Repository<Consultation>,
     private readonly emailService: EmailService,
+    private readonly dateUtilsService: DateUtilsService, 
   ) {}
 
-  async create(dataUser, createConsultationDto: any) {
-    const { id_schedule_consultant, appoinment_date, appoinment_time } =
-      createConsultationDto;
+  async create(timeZone: string, dataUser: any, createConsultationDto: any) {
+    const { id_schedule_consultant, appoinment_date_time } = createConsultationDto;
+    const clientTimeZone = timeZone;
+
+    if (!clientTimeZone) {
+      throw new HttpException(
+        'Client timezone is required.',
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+
+    const appoinmentDateTimeForDb = appoinment_date_time;
+
     const appoinmentVerification = await this.consultationRepository
       .createQueryBuilder('consultation')
       .andWhere('consultation.id_customer = :id_customer', {
@@ -32,24 +45,24 @@ export class ConsultationService {
         'consultation.id_schedule_consultant = :id_schedule_consultant',
         { id_schedule_consultant },
       )
-      .andWhere('consultation.appoinment_date = :appoinment_date', {
-        appoinment_date,
-      })
-      .andWhere('consultation.appoinment_time = :appoinment_time', {
-        appoinment_time,
+      .andWhere('consultation.appoinment_date_time = :appoinment_date_time', {
+        appoinment_date_time: appoinmentDateTimeForDb,
       })
       .getOne();
 
     if (appoinmentVerification) {
       throw new HttpException(
-        'appointment already scheduled!',
+        'Appointment already scheduled!',
         HttpStatus.CONFLICT,
       );
     }
+
     const consultationToSave = this.consultationRepository.create({
       id_customer: dataUser,
       ...createConsultationDto,
+      appoinment_date_time: appoinmentDateTimeForDb,
     });
+
     const savedResultOfSave: any =
       await this.consultationRepository.save(consultationToSave);
 
@@ -72,6 +85,7 @@ export class ConsultationService {
         HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }
+
     if (!savedConsultation || !savedConsultation.id) {
       console.error(
         'Erro: A consulta salva ou seu ID ainda está faltando após a extração.',
@@ -82,11 +96,10 @@ export class ConsultationService {
         HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }
+
     const fullConsultation = await this.consultationRepository
       .createQueryBuilder('consultation')
-      .where('consultation.id = :id', {
-        id: savedConsultation.id,
-      })
+      .where('consultation.id = :id', { id: savedConsultation.id })
       .leftJoinAndSelect('consultation.customer', 'customer')
       .leftJoinAndSelect(
         'consultation.scheduleConsultant',
@@ -99,63 +112,50 @@ export class ConsultationService {
       .leftJoinAndSelect('consultantSpecialty.consultant', 'consultant')
       .leftJoinAndSelect('consultantSpecialty.specialty', 'specialty')
       .getOne();
+
     if (
       fullConsultation &&
       fullConsultation.customer &&
       fullConsultation.scheduleConsultant?.consultantSpecialty?.consultant &&
       fullConsultation.scheduleConsultant.consultantSpecialty.specialty
     ) {
-      const [year, month, day] = fullConsultation.appoinment_date
-        .toString()
-        .split('-');
-      const formattedDate = `${day}/${month}/${year}`;
+
+      const appointmentDateTimeUTC = new Date(fullConsultation.appoinment_date_time);
+      const consultationDateTimeInClientZone = toZonedTime(appointmentDateTimeUTC, clientTimeZone);
+
+      const formattedDate = consultationDateTimeInClientZone.toLocaleDateString('pt-BR');
+
+      const hours = consultationDateTimeInClientZone.getHours().toString().padStart(2, '0');
+      const minutes = consultationDateTimeInClientZone.getMinutes().toString().padStart(2, '0');
+      const formattedTime = `${hours}:${minutes}`;
 
       await this.emailService.sendNewConsultationScheduledToConsultant(
-        fullConsultation.scheduleConsultant.consultantSpecialty.consultant
-          .email,
+        fullConsultation.scheduleConsultant.consultantSpecialty.consultant.email,
         fullConsultation.scheduleConsultant.consultantSpecialty.consultant.name,
         fullConsultation.customer.name,
         fullConsultation.scheduleConsultant.consultantSpecialty.specialty
           .name_specialty,
         formattedDate,
-        fullConsultation.appoinment_time,
-      );
-    } else {
-      console.warn(
-        'Não foi possível obter detalhes completos da consulta para enviar e-mail de agendamento ao consultor. Verifique as relações.',
-        {
-          fullConsultationExists: !!fullConsultation,
-          customerExists: !!fullConsultation?.customer,
-          consultantExists:
-            !!fullConsultation?.scheduleConsultant?.consultantSpecialty
-              ?.consultant,
-          specialtyExists:
-            !!fullConsultation?.scheduleConsultant?.consultantSpecialty
-              ?.specialty,
-        },
+        formattedTime,
       );
     }
-    return savedConsultation;
-  }
 
+    return savedConsultation;
+}
+  
   async findAll(
+    timeZone: string,
     filters: {
       idCustomer?: number;
       idConsultantSpecialty?: number;
-      appoinmentDate?: string;
-      appoinmentTime?: string;
+      appoinment_date_time?: string;
     },
     page: number = 1,
     limit: number = 10,
   ) {
-    const {
-      idCustomer,
-      idConsultantSpecialty,
-      appoinmentDate,
-      appoinmentTime,
-    } = filters;
+    const { idCustomer, idConsultantSpecialty, appoinment_date_time } = filters;
     const skip = (page - 1) * limit;
-
+  
     const query = this.consultationRepository
       .createQueryBuilder('consultation')
       .innerJoinAndSelect('consultation.customer', 'customer')
@@ -171,8 +171,7 @@ export class ConsultationService {
       .innerJoinAndSelect('consultantSpecialty.specialty', 'specialty')
       .select([
         'consultation.id',
-        'consultation.appoinment_date',
-        'consultation.appoinment_time',
+        'consultation.appoinment_date_time',
         'consultation.status',
         'customer.id',
         'customer.name',
@@ -185,60 +184,71 @@ export class ConsultationService {
         'specialty.id',
         'specialty.name_specialty',
       ]);
-
+  
     if (idCustomer) query.andWhere('customer.id = :idCustomer', { idCustomer });
     if (idConsultantSpecialty)
       query.andWhere('consultantSpecialty.id = :idConsultantSpecialty', {
         idConsultantSpecialty,
       });
-    if (appoinmentDate)
-      query.andWhere('consultation.appoinment_date = :appoinmentDate', {
-        appoinmentDate,
+  
+    if (appoinment_date_time) {
+      const utcDateTime = this.dateUtilsService.getZonedDate(
+        new Date(appoinment_date_time),
+        timeZone,
+      );
+      query.andWhere('consultation.appoinment_date_time = :utcDateTime', {
+        utcDateTime,
       });
-    if (appoinmentTime)
-      query.andWhere('consultation.appoinment_time = :appoinmentTime', {
-        appoinmentTime,
-      });
-
+    }
+  
     query.skip(skip).take(limit);
-
+  
     const [data, total] = await query.getManyAndCount();
-
-    const formattedData = data.map((consultation) => ({
-      id: consultation.id,
-      customer: {
-        id: consultation.customer.id,
-        name: consultation.customer.name,
-      },
-      schedule_consultant: {
-        id: consultation.scheduleConsultant.id,
-        consultant_specialty: {
-          id: consultation.scheduleConsultant.consultantSpecialty.id,
-          consultant: {
-            id: consultation.scheduleConsultant.consultantSpecialty.consultant
-              .id,
-            name: consultation.scheduleConsultant.consultantSpecialty.consultant
-              .name,
-          },
-          specialty: {
-            id: consultation.scheduleConsultant.consultantSpecialty.specialty
-              .id,
-            name_specialty:
-              consultation.scheduleConsultant.consultantSpecialty.specialty
-                .name_specialty,
-          },
-          value_per_duration:
-            consultation.scheduleConsultant.consultantSpecialty
-              .value_per_duration,
-          duration:
-            consultation.scheduleConsultant.consultantSpecialty.duration,
+  
+    const formattedData = data.map((consultation) => {
+      const localDateTime = this.dateUtilsService.getZonedDate(
+        consultation.appoinment_date_time,
+        timeZone,
+      );
+  
+      return {
+        id: consultation.id,
+        customer: {
+          id: consultation.customer.id,
+          name: consultation.customer.name,
         },
-      },
-      appoinment_date: consultation.appoinment_date,
-      appoinment_time: consultation.appoinment_time,
-      status: consultation.status,
-    }));
-
+        schedule_consultant: {
+          id: consultation.scheduleConsultant.id,
+          consultant_specialty: {
+            id: consultation.scheduleConsultant.consultantSpecialty.id,
+            consultant: {
+              id: consultation.scheduleConsultant.consultantSpecialty.consultant
+                .id,
+              name: consultation.scheduleConsultant.consultantSpecialty.consultant
+                .name,
+            },
+            specialty: {
+              id: consultation.scheduleConsultant.consultantSpecialty.specialty
+                .id,
+              name_specialty:
+                consultation.scheduleConsultant.consultantSpecialty.specialty
+                  .name_specialty,
+            },
+            value_per_duration:
+              consultation.scheduleConsultant.consultantSpecialty
+                .value_per_duration,
+            duration:
+              consultation.scheduleConsultant.consultantSpecialty.duration,
+          },
+        },
+        localDateTime: {
+          date: localDateTime.toISOString().split('T')[0],
+          time: localDateTime.toTimeString().split(' ')[0].slice(0, 5),
+        },
+        status: consultation.status,
+      };
+    });
+  
     return {
       data: formattedData,
       meta: {
@@ -248,6 +258,8 @@ export class ConsultationService {
       },
     };
   }
+  
+  // metodo não necessita de timezone, pois não é utilizado pelo cliente
   async findByIdConsultation(id: string) {
     const query = this.consultationRepository
       .createQueryBuilder('consultation')
@@ -266,22 +278,11 @@ export class ConsultationService {
         'consultation.id',
         'consultation.id_customer',
         'consultation.id_schedule_consultant',
-        'consultation.appoinment_date',
-        'consultation.appoinment_time',
-        'consultation.status',
-        'consultation.attended',
-        'consultation.created_at',
-        'consultation.updated_at',
         'customer.id',
-        'customer.name',
         'scheduleConsultant.id',
         'consultantSpecialty.id',
-        'consultantSpecialty.duration',
-        'consultantSpecialty.value_per_duration',
         'consultant.id',
-        'consultant.name',
         'specialty.id',
-        'specialty.name_specialty',
       ])
       .where('consultation.id = :id', { id: +id });
 
@@ -295,7 +296,6 @@ export class ConsultationService {
       id: consultation.id,
       customer: {
         id: consultation.customer.id,
-        name: consultation.customer.name,
       },
       schedule_consultant: {
         id: consultation.scheduleConsultant.id,
@@ -304,34 +304,18 @@ export class ConsultationService {
           consultant: {
             id: consultation.scheduleConsultant.consultantSpecialty.consultant
               .id,
-            name: consultation.scheduleConsultant.consultantSpecialty.consultant
-              .name,
           },
           specialty: {
             id: consultation.scheduleConsultant.consultantSpecialty.specialty
               .id,
-            name_specialty:
-              consultation.scheduleConsultant.consultantSpecialty.specialty
-                .name_specialty,
           },
-          value_per_duration:
-            consultation.scheduleConsultant.consultantSpecialty
-              .value_per_duration,
-          duration:
-            consultation.scheduleConsultant.consultantSpecialty.duration,
         },
       },
-      appoinment_date: consultation.appoinment_date,
-      appoinment_time: consultation.appoinment_time,
-      status: consultation.status,
-      attended: consultation.attended,
-      created_at: consultation.created_at,
-      updated_at: consultation.updated_at,
     }));
     return { data: formattedData };
   }
 
-  async findOne(dataUser: number) {
+  async findOne(timeZone: string, dataUser: number) {
     const query = this.consultationRepository
       .createQueryBuilder('consultation')
       .innerJoinAndSelect('consultation.customer', 'customer')
@@ -349,8 +333,7 @@ export class ConsultationService {
         'consultation.id',
         'consultation.id_customer',
         'consultation.id_schedule_consultant',
-        'consultation.appoinment_date',
-        'consultation.appoinment_time',
+        'consultation.appoinment_date_time',
         'consultation.status',
         'consultation.attended',
         'consultation.created_at',
@@ -374,7 +357,14 @@ export class ConsultationService {
       throw new HttpException(`Consultations for user ID: ${dataUser} not found`, HttpStatus.NO_CONTENT)
     }
 
-    const formattedData = consultations.map((consultation) => ({
+    const formattedData = consultations.map((consultation) => {
+
+      const localDateTime = this.dateUtilsService.getZonedDate(
+        consultation.appoinment_date_time,
+        timeZone,
+      );
+
+      return {
       id: consultation.id,
       customer: {
         id: consultation.customer.id,
@@ -404,17 +394,20 @@ export class ConsultationService {
             consultation.scheduleConsultant.consultantSpecialty.duration,
         },
       },
-      appoinment_date: consultation.appoinment_date,
-      appoinment_time: consultation.appoinment_time,
+      localDateTime: {
+          date: localDateTime.toISOString().split('T')[0],
+          time: localDateTime.toTimeString().split(' ')[0].slice(0, 5),
+        },
       status: consultation.status,
       attended: consultation.attended,
       created_at: consultation.created_at,
       updated_at: consultation.updated_at,
-    }));
+      }
+    });
     return { data: formattedData };
   }
 
-  async findOneByIdConsultant(dataUser: number) {
+  async findOneByIdConsultant(timeZone:string, dataUser: number) {
     const query = this.consultationRepository
       .createQueryBuilder('consultation')
       .innerJoinAndSelect('consultation.customer', 'customer')
@@ -432,7 +425,7 @@ export class ConsultationService {
         'consultation.id',
         'consultation.id_customer',
         'consultation.id_schedule_consultant',
-        'consultation.appoinment_date',
+        'consultation.appoinment_date_time',
         'consultation.appoinment_time',
         'consultation.status',
         'consultation.attended',
@@ -459,7 +452,12 @@ export class ConsultationService {
       throw new HttpException(`Consultations for user ID: ${dataUser} not found`, HttpStatus.NOT_FOUND)
     }
 
-    const formattedData = consultations.map((consultation) => ({
+    const formattedData = consultations.map((consultation) => {
+      const localDateTime = this.dateUtilsService.getZonedDate(
+        consultation.appoinment_date_time,
+        timeZone,
+      );
+      return{
       id: consultation.id,
       customer: {
         id: consultation.customer.id,
@@ -491,47 +489,51 @@ export class ConsultationService {
             consultation.scheduleConsultant.consultantSpecialty.duration,
         },
       },
-      appoinment_date: consultation.appoinment_date,
-      appoinment_time: consultation.appoinment_time,
+      localDateTime: {
+          date: localDateTime.toISOString().split('T')[0],
+          time: localDateTime.toTimeString().split(' ')[0].slice(0, 5),
+        },
       status: consultation.status,
       attended: consultation.attended,
       created_at: consultation.created_at,
       updated_at: consultation.updated_at,
-    }));
+      }
+    });
     return { data: formattedData };
   }
 
   async cancelConsultationByCustomer(
     consultationId: string,
+    timeZone: string,
     customerId: number,
   ) {
     const consultation = await this.consultationRepository.preload({
       id: +consultationId,
     });
+  
     if (!consultation) {
-      // throw new NotFoundException(
-      //   `Consulta com ID ${consultationId} não encontrada.`,
-      // );
-      throw new HttpException(`Consultations for user ID: ${consultationId} not found`, HttpStatus.NOT_FOUND)
+      throw new HttpException(
+        `Consultation ID: ${consultationId} not found`,
+        HttpStatus.NOT_FOUND,
+      );
     }
-    // Valida se o cliente logado é o dono da consulta
+  
     if (consultation.id_customer !== customerId) {
       throw new ForbiddenException(
         'Você não tem permissão para cancelar esta consulta.',
       );
     }
-    // Valida se o status atual permite o cancelamento pelo cliente (apenas 'pendente')
+  
     if (consultation.status !== 'pendente') {
       throw new BadRequestException(
         'Somente consultas com status "pendente" podem ser canceladas pelo cliente.',
       );
     }
-    const newStatus = 'cancelada';
-    consultation.status = newStatus;
-
+  
+    consultation.status = 'cancelada';
     const updatedConsultation =
       await this.consultationRepository.save(consultation);
-
+  
     const fullConsultation = await this.consultationRepository
       .createQueryBuilder('consultation')
       .where('consultation.id = :id', { id: updatedConsultation.id })
@@ -547,42 +549,41 @@ export class ConsultationService {
       .leftJoinAndSelect('consultantSpecialty.consultant', 'consultant')
       .leftJoinAndSelect('consultantSpecialty.specialty', 'specialty')
       .getOne();
-
+  
     if (
       fullConsultation &&
       fullConsultation.customer &&
       fullConsultation.scheduleConsultant?.consultantSpecialty?.consultant
     ) {
-      const [year, month, day] = fullConsultation.appoinment_date
-        .toString()
-        .split('-');
-      const formattedDate = `${day}/${month}/${year}`;
-
+      const localDateTime = this.dateUtilsService.getZonedDate(
+        fullConsultation.appoinment_date_time,
+        timeZone,
+      );
+      const formattedDate = localDateTime.toISOString().split('T')[0];
+      const formattedTime = localDateTime.toTimeString().split(' ')[0].slice(0, 5);
+  
       await this.emailService.sendConsultationCanceledByCustomerToConsultant(
-        fullConsultation.scheduleConsultant.consultantSpecialty.consultant
-          .email,
+        fullConsultation.scheduleConsultant.consultantSpecialty.consultant.email,
         fullConsultation.scheduleConsultant.consultantSpecialty.consultant.name,
         fullConsultation.customer.name,
         fullConsultation.scheduleConsultant.consultantSpecialty.specialty
           .name_specialty,
         formattedDate,
-        fullConsultation.appoinment_time,
-      );
-    } else {
-      console.warn(
-        'Não foi possível obter detalhes completos da consulta para notificação de cancelamento ao consultor.',
+        formattedTime,
       );
     }
-
+  
     return updatedConsultation;
   }
+  
   async findConsultationsByUserIdPaginated(
+    timeZone: string,
     userId: number,
     page: number,
     limit: number,
-  ): Promise<[Consultation[], number]> {
+  ): Promise<{ data: any[]; total: number }> {
     const skip = (page - 1) * limit;
-
+  
     const queryBuilder = this.consultationRepository
       .createQueryBuilder('consultation')
       .where('consultation.id_customer = :userId', { userId })
@@ -596,42 +597,70 @@ export class ConsultationService {
       )
       .leftJoinAndSelect('consultantSpecialty.specialty', 'specialty')
       .leftJoinAndSelect('consultantSpecialty.consultant', 'consultant')
-      .orderBy('consultation.appoinment_date', 'DESC')
-      .addOrderBy('consultation.appoinment_time', 'DESC')
+      .orderBy('consultation.appoinment_date_time', 'DESC')
       .skip(skip)
       .take(limit);
-
+  
     const [consultations, totalCount] = await queryBuilder.getManyAndCount();
-
-    return [consultations, totalCount];
+  
+    const data = consultations.map((consultation) => {
+      const localDateTime = this.dateUtilsService.getZonedDate(
+        consultation.appoinment_date_time,
+        timeZone,
+      );
+  
+      return {
+        ...consultation,
+        localDateTime: {
+          date: localDateTime.toISOString().split('T')[0],
+          time: localDateTime.toTimeString().split(' ')[0].slice(0, 5),
+        },
+      };
+    });
+  
+    return { data, total: totalCount };
   }
+  
 
   async updateStatusByConsultant(
     consultationId: string,
+    timeZone: string,
     updateConsultationDto: any,
     consultantId: number,
   ) {
     const consultation = await this.consultationRepository.preload({
       id: +consultationId,
     });
-
+  
     if (!consultation) {
-      throw new HttpException(`Consultations for user ID: ${consultationId} not found`, HttpStatus.NO_CONTENT)
+      throw new HttpException(
+        `Consultation ID: ${consultationId} not found`,
+        HttpStatus.NO_CONTENT,
+      );
     }
+  
     const fullConsultationCheck = await this.consultationRepository
-      .createQueryBuilder('consultation')
-      .where('consultation.id = :id', { id: +consultationId })
-      .leftJoinAndSelect(
-        'consultation.scheduleConsultant',
-        'scheduleConsultant',
-      )
-      .leftJoinAndSelect(
-        'scheduleConsultant.consultantSpecialty',
-        'consultantSpecialty',
-      )
-      .leftJoinAndSelect('consultantSpecialty.consultant', 'consultant')
-      .getOne();
-
+    .createQueryBuilder('consultation')
+    .where('consultation.id = :id', { id: +consultationId })
+    .innerJoin('consultation.customer', 'customer')
+    .innerJoin('consultation.scheduleConsultant', 'scheduleConsultant')
+    .innerJoin('scheduleConsultant.consultantSpecialty', 'consultantSpecialty')
+    .innerJoin('consultantSpecialty.specialty', 'specialty')
+    .innerJoin('consultantSpecialty.consultant', 'consultant')
+    .select([
+      'consultation.id',
+      'consultation.appoinment_date_time',
+      'scheduleConsultant.id',
+      'customer.id',
+      'customer.name',
+      'customer.email',
+      'consultantSpecialty.id',
+      'consultant.id',
+      'consultant.name',
+      'specialty.name_specialty',
+    ])
+    .getOne();
+    
     if (
       !fullConsultationCheck ||
       fullConsultationCheck.scheduleConsultant?.consultantSpecialty?.consultant
@@ -641,111 +670,44 @@ export class ConsultationService {
         'Você não tem permissão para atualizar esta consulta.',
       );
     }
-
-    let emailNotificationNeeded = false;
-    let oldStatus: string | undefined;
-    let newStatus: string | undefined;
-
-    if (updateConsultationDto.status !== undefined) {
-      oldStatus = consultation.status;
-      newStatus = updateConsultationDto.status;
-
-      const allowedStatuses = ['pendente', 'realizada', 'cancelada'];
-      if (!allowedStatuses.includes(newStatus)) {
-        throw new BadRequestException(
-          `Status inválido: ${newStatus}. Status permitidos são: ${allowedStatuses.join(', ')}`,
-        );
-      }
-      if (oldStatus !== 'pendente' && oldStatus !== newStatus) {
-        throw new BadRequestException(
-          `O status da consulta já foi atualizado e não pode ser alterado novamente.`,
-        );
-      }
-      if (oldStatus === 'pendente') {
-        if (newStatus !== 'realizada' && newStatus !== 'cancelada') {
-          throw new BadRequestException(
-            `O status só pode ser alterado de 'pendente' para 'realizada' ou 'cancelada'.`,
-          );
-        }
-      }
-      if (oldStatus !== newStatus) {
-        emailNotificationNeeded = true;
-      }
-    }
     Object.assign(consultation, updateConsultationDto);
-
     const updatedConsultation =
       await this.consultationRepository.save(consultation);
-
-    if (
-      emailNotificationNeeded &&
-      oldStatus !== undefined &&
-      newStatus !== undefined
-    ) {
-      const fullConsultation = await this.consultationRepository
-        .createQueryBuilder('consultation')
-        .where('consultation.id = :id', { id: updatedConsultation.id })
-        .leftJoinAndSelect('consultation.customer', 'customer')
-        .leftJoinAndSelect(
-          'consultation.scheduleConsultant',
-          'scheduleConsultant',
-        )
-        .leftJoinAndSelect(
-          'scheduleConsultant.consultantSpecialty',
-          'consultantSpecialty',
-        )
-        .leftJoinAndSelect('consultantSpecialty.consultant', 'consultant')
-        .leftJoinAndSelect('consultantSpecialty.specialty', 'specialty')
-        .getOne();
-
-      if (
-        fullConsultation &&
-        fullConsultation.customer &&
-        fullConsultation.scheduleConsultant?.consultantSpecialty?.consultant
-      ) {
-        const [year, month, day] = fullConsultation.appoinment_date
-          .toString()
-          .split('-');
-        const formattedDate = `${day}/${month}/${year}`;
-
-        const customerEmail = fullConsultation.customer.email;
-        const customerName = fullConsultation.customer.name;
-        const consultantName =
-          fullConsultation.scheduleConsultant.consultantSpecialty.consultant
-            .name;
-        const nameSpecialty =
-          fullConsultation.scheduleConsultant.consultantSpecialty.specialty
-            .name_specialty;
-        const appointmentTime = fullConsultation.appoinment_time;
-
-        if (newStatus === 'realizada') {
-          await this.emailService.sendConsultationCompletedToCustomer(
-            customerEmail,
-            customerName,
-            consultantName,
-            nameSpecialty,
-            formattedDate,
-            appointmentTime,
-          );
-        } else if (newStatus === 'cancelada') {
-          await this.emailService.sendConsultationCanceledByConsultantToCustomer(
-            customerEmail,
-            customerName,
-            consultantName,
-            nameSpecialty,
-            formattedDate,
-            appointmentTime,
-          );
-        }
-      } else {
-        console.warn(
-          'Não foi possível obter detalhes completos da consulta para notificação de e-mail (atualização pelo consultor).',
-        );
-      }
-    }
-
+  
+    const localDateTime = this.dateUtilsService.getZonedDate(
+      updatedConsultation.appoinment_date_time,
+      timeZone,
+    );
+    const formattedDate = localDateTime.toISOString().split('T')[0];
+    const formattedTime = localDateTime.toTimeString().split(' ')[0].slice(0, 5);
+  
+    if (updateConsultationDto.status === 'realizada') {
+      await this.emailService.sendConsultationCompletedToCustomer(
+        fullConsultationCheck.customer.email,
+        fullConsultationCheck.customer.name,
+        fullConsultationCheck.scheduleConsultant.consultantSpecialty.consultant
+          .name,
+        fullConsultationCheck.scheduleConsultant.consultantSpecialty.specialty
+          .name_specialty,
+        this.dateUtilsService.formatDysplayDate(formattedDate),
+        formattedTime,
+      );
+    } else if (updateConsultationDto.status === 'cancelada') {
+      await this.emailService.sendConsultationCanceledByConsultantToCustomer(
+        fullConsultationCheck.customer.email,
+        fullConsultationCheck.customer.name,
+        fullConsultationCheck.scheduleConsultant.consultantSpecialty.consultant
+          .name,
+        fullConsultationCheck.scheduleConsultant.consultantSpecialty.specialty
+          .name_specialty,
+        this.dateUtilsService.formatDysplayDate(formattedDate),
+        formattedTime,
+      );
+    } 
+  
     return updatedConsultation;
   }
+  
 
   async remove(id: string) {
     const consultation = await this.consultationRepository.findOne({

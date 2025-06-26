@@ -25,7 +25,7 @@ export class ScheduleConsultantController {
     private readonly scheduleConsultantService: ScheduleConsultantService,
   ) {}
 
-  @Get(':idConsultantSpecialty/timeslots')
+  @Get(':idConsultantSpecialty/timeslots/:timeZone')
   @UseInterceptors(NoCacheInterceptor)
   @ApiQuery({
     name: 'date',
@@ -35,27 +35,25 @@ export class ScheduleConsultantController {
   })
   async getTimeslots(
     @Param('idConsultantSpecialty') idConsultantSpecialty: number,
+    @Param('timeZone') timeZone: string,
     @Query('date') date?: string,
   ) {
     return await this.scheduleConsultantService.getTimeslots(
       idConsultantSpecialty,
+      decodeURIComponent(timeZone),
       date,
     );
   }
 
-  @UseGuards(createRoleGuard(['adm', 'consultant']), OwnershipScheduleConsultant)
-  @Post()
-  create(@Body() createScheduleConsultantDto: CreateScheduleConsultantDto) {
-    return this.scheduleConsultantService.create(createScheduleConsultantDto);
-  }
-
-  @Post('recurring')
+  @Post('recurring/:timeZone')
   @UseGuards(createRoleGuard(['adm', 'consultant']), OwnershipScheduleConsultant)
   async createRecurring(
+    @Param('timeZone') timeZone: string,
     @Body() createRecurringScheduleDto: CreateScheduleRecurringDto,
   ) {
     return this.scheduleConsultantService.createRecurring(
       createRecurringScheduleDto,
+      decodeURIComponent(timeZone)
     );
   }
 

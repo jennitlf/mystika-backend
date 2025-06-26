@@ -40,7 +40,6 @@ export class EmailService {
         subject: subject,
         html: htmlContent,
       });
-      console.log(`[EmailService] Sucesso: Email de boas-vindas enviado para o usuário ${userEmail}`);
     } catch (error) {
       console.error(
         `[EmailService] Erro ao enviar email de boas-vindas para o usuário ${userEmail}:`,
@@ -86,7 +85,6 @@ export class EmailService {
         subject: subject,
         html: htmlContent,
       });
-      console.log(`[EmailService] Sucesso: Email de boas-vindas e instruções enviado para o consultor ${consultantEmail}`);
     } catch (error) {
       console.error(
         `[EmailService] Erro ao enviar email de boas-vindas para o consultor ${consultantEmail}:`,
@@ -166,9 +164,6 @@ export class EmailService {
         subject: subject,
         html: htmlContent,
       });
-      console.log(
-        `[EmailService] Sucesso: Consulta REALIZADA enviada para ${customerEmail}`,
-      );
     } catch (error) {
       console.error(
         `[EmailService] Erro ao enviar email de status REALIZADA para ${customerEmail}:`,
@@ -208,9 +203,6 @@ export class EmailService {
         subject: subject,
         html: htmlContent,
       });
-      console.log(
-        `[EmailService] Sucesso: Consulta CANCELADA (por consultor) enviada para ${customerEmail}`,
-      );
     } catch (error) {
       console.error(
         `[EmailService] Erro ao enviar email de status CANCELADA (por consultor) para ${customerEmail}:`,
@@ -251,9 +243,6 @@ export class EmailService {
         subject: subject,
         html: htmlContent,
       });
-      console.log(
-        `[EmailService] Sucesso: Consulta CANCELADA (por cliente) enviada para consultor ${consultantEmail}`,
-      );
     } catch (error) {
       console.error(
         `[EmailService] Erro ao enviar email de status CANCELADA (por cliente) para consultor ${consultantEmail}:`,
