@@ -70,7 +70,6 @@ export class AwsS3Service {
     try {
       const command = new DeleteObjectCommand(deleteParams);
       await this.s3Client.send(command);
-      console.log(`Arquivo ${key} deletado do S3 com sucesso do bucket ${this.bucketName}.`);
     } catch (error) {
       console.error(`Erro ao deletar arquivo ${key} do S3 com SDK v3:`, error);
       throw new Error('Falha ao deletar arquivo do S3.');

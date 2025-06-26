@@ -27,6 +27,12 @@ export class ScheduleConsultant {
   @Column({ name: 'hour_end', type: 'time', nullable: false })
   hour_end: string;
 
+  @Column({ name: 'date_time_initial', type: 'timestamp', nullable: false })
+  date_time_initial: Date;
+
+  @Column({ name: 'date_time_end', type: 'timestamp', nullable: false })
+  date_time_end: Date;
+
   @Column({
     name: 'status',
     type: 'varchar',
@@ -58,4 +64,5 @@ export class ScheduleConsultant {
 export class ScheduleAvailabilityDto {
   readonly date: Date;
   readonly available_times: string[];
+  readonly schedule_id: number;
 }

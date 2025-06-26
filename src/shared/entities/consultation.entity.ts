@@ -48,6 +48,13 @@ export class Consultation {
   appoinment_time: string;
 
   @Column({
+    name: 'appoinment_date_time',
+    type: 'timestamp',
+    nullable: true,
+  })
+  appoinment_date_time: Date;
+
+  @Column({
     name: 'status',
     type: 'varchar',
     nullable: true,
@@ -64,6 +71,7 @@ export class Consultation {
     length: 9,
   })
   attended: string;
+
   @CreateDateColumn()
   created_at: Date;
 
