@@ -27,18 +27,18 @@ export class ScheduleException {
   date_exception: Date;
 
   @Column({
-    name: 'day_week',
-    type: 'int',
-    nullable: false,
-  })
-  day_week: number;
-
-  @Column({
     name: 'unavailable_time',
     type: 'time',
     nullable: false,
   })
   unavailable_time: string;
+
+  @Column({
+    name: 'unavailable_date_time',
+    type: 'timestamp',
+    nullable: true,
+  })
+  unavailable_date_time: Date;
 
   @Column({
     name: 'reason',
@@ -54,3 +54,4 @@ export class ScheduleException {
   @JoinColumn({ name: 'id_schedule_consultant' })
   scheduleConsultant: ScheduleConsultant;
 }
+

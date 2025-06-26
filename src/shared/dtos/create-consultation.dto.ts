@@ -6,6 +6,10 @@ export class CreateConsultationDto {
   readonly id_schedule_consultant: number;
 
   @IsNotEmpty()
+  @IsISO8601()
+  readonly appoinment_date_time: string;
+
+  @IsNotEmpty()
   @IsString()
   readonly appoinment_time: string;
 

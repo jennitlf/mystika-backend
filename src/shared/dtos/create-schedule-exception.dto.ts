@@ -10,8 +10,8 @@ export default class CreateScheduleExceptionDto {
   readonly date_exception: string;
 
   @IsNotEmpty()
-  @IsNumber()
-  readonly day_week: number;
+  @IsISO8601()
+  readonly unavailable_date_time: string
 
   @IsNotEmpty()
   @IsString()
