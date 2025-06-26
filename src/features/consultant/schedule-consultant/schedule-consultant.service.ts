@@ -13,7 +13,7 @@ import {
 import { ScheduleException } from 'src/shared/entities/schedule_exception.entity';
 import { DateUtilsService } from '../../../shared/utils/date.utils';
 import { Consultation } from 'src/shared/entities/consultation.entity';
-import { toZonedTime } from 'date-fns-tz';
+import { toZonedTime, formatInTimeZone } from 'date-fns-tz';
 
 @Injectable()
 export class ScheduleConsultantService {
@@ -35,11 +35,9 @@ export class ScheduleConsultantService {
     return date;
   }
   
-  private formatTime(date: Date): string {
-    const hours = date.getHours().toString().padStart(2, '0');
-    const minutes = date.getMinutes().toString().padStart(2, '0');
-    const formatted = `${hours}:${minutes}`;
-    console.log(`Formatted date ${date} into time: ${formatted}`);
+  private formatTime(date: Date, timeZone: string): string {
+    const formatted = formatInTimeZone(date, timeZone, 'HH:mm'); // Usa o fuso horário passado
+    console.log(`Formatted date ${date} into time for timezone ${timeZone}: ${formatted}`);
     return formatted;
   }
   
@@ -100,7 +98,7 @@ export class ScheduleConsultantService {
           date_time_end,
           schedule.consultantSpecialty.duration,
         );
-        console.log(`Available times after generation for schedule ${schedule.id}:`, availableTimes.map(t => this.formatTime(t)));
+        console.log(`Available times after generation for schedule ${schedule.id}:`, availableTimes.map(t => this.formatTime(t, timeZone)));
   
         const unavailableExceptionTimes = schedule.scheduleException
           .map((ex) => {
@@ -109,7 +107,7 @@ export class ScheduleConsultantService {
               timeZone,
             );
             const formattedExceptionTime = exceptionDateTimeInClientZone.toDateString() === date_time_initial.toDateString()
-              ? this.formatTime(exceptionDateTimeInClientZone)
+              ? this.formatTime(exceptionDateTimeInClientZone, timeZone)
               : null;
             console.log(`Exception: ${ex.id}. Exception time in client zone: ${exceptionDateTimeInClientZone}. Formatted: ${formattedExceptionTime}`);
             return formattedExceptionTime;
@@ -119,20 +117,20 @@ export class ScheduleConsultantService {
   
         availableTimes = availableTimes.filter(
           (time) => {
-            const isAvailable = !unavailableExceptionTimes.includes(this.formatTime(time));
-            console.log(`Filtering time ${this.formatTime(time)} against exceptions. Is available: ${isAvailable}`);
+            const isAvailable = !unavailableExceptionTimes.includes(this.formatTime(time, timeZone));
+            console.log(`Filtering time ${this.formatTime(time, timeZone)} against exceptions. Is available: ${isAvailable}`);
             return isAvailable;
           },
         );
-        console.log(`Available times after filtering exceptions for schedule ${schedule.id}:`, availableTimes.map(t => this.formatTime(t)));
+        console.log(`Available times after filtering exceptions for schedule ${schedule.id}:`, availableTimes.map(t => this.formatTime(t, timeZone)));
   
         if (date_time_initial.toDateString() === now.toDateString()) {
           availableTimes = availableTimes.filter((time) => {
             const isAfterNow = time > now;
-            console.log(`Filtering time ${this.formatTime(time)} against current time (${this.formatTime(now)}). Is after now: ${isAfterNow}`);
+            console.log(`Filtering time ${this.formatTime(time, timeZone)} against current time (${this.formatTime(now, timeZone)}). Is after now: ${isAfterNow}`);
             return isAfterNow;
           });
-          console.log(`Available times after filtering past times for current day for schedule ${schedule.id}:`, availableTimes.map(t => this.formatTime(t)));
+          console.log(`Available times after filtering past times for current day for schedule ${schedule.id}:`, availableTimes.map(t => this.formatTime(t, timeZone)));
         }
   
         const bookedTimes = schedule.consultation
@@ -142,7 +140,7 @@ export class ScheduleConsultantService {
               timeZone,
             );
             const formattedBookedTime = consultationDateTimeInClientZone.toDateString() === date_time_initial.toDateString()
-              ? this.formatTime(consultationDateTimeInClientZone)
+              ? this.formatTime(consultationDateTimeInClientZone, timeZone)
               : null;
             console.log(`Consultation: ${c.id}. Consultation time in client zone: ${consultationDateTimeInClientZone}. Formatted: ${formattedBookedTime}`);
             return formattedBookedTime;
@@ -152,16 +150,16 @@ export class ScheduleConsultantService {
   
         availableTimes = availableTimes.filter(
           (time) => {
-            const isAvailable = !bookedTimes.includes(this.formatTime(time));
-            console.log(`Filtering time ${this.formatTime(time)} against booked times. Is available: ${isAvailable}`);
+            const isAvailable = !bookedTimes.includes(this.formatTime(time, timeZone));
+            console.log(`Filtering time ${this.formatTime(time, timeZone)} against booked times. Is available: ${isAvailable}`);
             return isAvailable;
           },
         );
-        console.log(`Final available times for schedule ${schedule.id}:`, availableTimes.map(t => this.formatTime(t)));
+        console.log(`Final available times for schedule ${schedule.id}:`, availableTimes.map(t => this.formatTime(t, timeZone)));
   
         return {
           date: date_time_initial,
-          available_times: availableTimes.map((time) => this.formatTime(time)),
+          available_times: availableTimes.map((time) => this.formatTime(time, timeZone)),
           schedule_id: schedule.id,
         };
       });
