@@ -8,18 +8,28 @@ export class DateUtilsService {
 
   
   getZonedDate(date: Date = new Date(), clientTimeZone?: string): Date {
-    const timeZoneToUse =
-      clientTimeZone || this.configService.get<string>('TIMEZONE', 'America/Sao_Paulo');
-    return DateTime.fromJSDate(date, { zone: timeZoneToUse }).toJSDate();
+    const timeZoneToUse = clientTimeZone || this.configService.get<string>('TIMEZONE', 'UTC');
+    const zonedDate = DateTime.fromJSDate(date).setZone(timeZoneToUse);
+
+    if (!zonedDate.isValid) {
+      console.error(`Fuso horário inválido: ${timeZoneToUse}`);
+      return date;
+    }
+
+    return zonedDate.toJSDate();
   }
 
   
   getStartOfDayInZone(date: Date, clientTimeZone: string): Date {
-    const timeZoneToUse =
-      clientTimeZone || this.configService.get<string>('TIMEZONE', 'America/Sao_Paulo');
-    return DateTime.fromJSDate(date, { zone: timeZoneToUse })
-      .startOf('day')
-      .toJSDate();
+    const timeZoneToUse = clientTimeZone || this.configService.get<string>('TIMEZONE', 'UTC');
+    const startOfDay = DateTime.fromJSDate(date).setZone(timeZoneToUse).startOf('day');
+
+    if (!startOfDay.isValid) {
+      console.error(`Fuso horário inválido: ${timeZoneToUse}`);
+      return date;
+    }
+
+    return startOfDay.toJSDate();
   }
 
   
