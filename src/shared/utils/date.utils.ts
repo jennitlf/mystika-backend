@@ -8,14 +8,17 @@ export class DateUtilsService {
 
   
   getZonedDate(date: Date = new Date(), clientTimeZone?: string): Date {
-    const timeZoneToUse = clientTimeZone || this.configService.get<string>('TIMEZONE', 'UTC');
-    const zonedDate = DateTime.fromJSDate(date).setZone(timeZoneToUse);
-
+    const timeZoneToUse = clientTimeZone || 'UTC';
+    console.log(`Recebido: date=${date}, timeZone=${timeZoneToUse}`);
+  
+    const zonedDate = DateTime.fromJSDate(date, { zone: timeZoneToUse });
+  
     if (!zonedDate.isValid) {
-      console.error(`Fuso horário inválido: ${timeZoneToUse}`);
+      console.error(`Fuso horário inválido ou erro na conversão: ${timeZoneToUse}`);
       return date;
     }
-
+  
+    console.log(`Convertido para ${timeZoneToUse}: ${zonedDate.toISO()}`);
     return zonedDate.toJSDate();
   }
 
