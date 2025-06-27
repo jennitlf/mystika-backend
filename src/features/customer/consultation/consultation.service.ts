@@ -13,6 +13,7 @@ import { Repository } from 'typeorm';
 import { EmailService } from 'src/features/email/email.service';
 import { DateUtilsService } from 'src/shared/utils/date.utils';
 import { toZonedTime } from 'date-fns-tz';
+import { DateTime } from 'luxon';
 
 @Injectable()
 export class ConsultationService {
@@ -314,7 +315,7 @@ export class ConsultationService {
     }));
     return { data: formattedData };
   }
-
+//  busca pelo id do cliente, retorna todas as consultas agendadas pelo cliente, independente de ser consultor ou usuario
   async findOne(timeZone: string, dataUser: number) {
     const query = this.consultationRepository
       .createQueryBuilder('consultation')
@@ -406,7 +407,7 @@ export class ConsultationService {
     });
     return { data: formattedData };
   }
-
+  // busca consultas por id do consultor
   async findOneByIdConsultant(timeZone:string, dataUser: number) {
     const query = this.consultationRepository
       .createQueryBuilder('consultation')
@@ -421,29 +422,6 @@ export class ConsultationService {
       )
       .innerJoinAndSelect('consultantSpecialty.consultant', 'consultant')
       .innerJoinAndSelect('consultantSpecialty.specialty', 'specialty')
-      .select([
-        'consultation.id',
-        'consultation.id_customer',
-        'consultation.id_schedule_consultant',
-        'consultation.appoinment_date_time',
-        'consultation.appoinment_time',
-        'consultation.status',
-        'consultation.attended',
-        'consultation.created_at',
-        'consultation.updated_at',
-        'customer.id',
-        'customer.name',
-        'customer.email',
-        'customer.phone',
-        'scheduleConsultant.id',
-        'consultantSpecialty.id',
-        'consultantSpecialty.duration',
-        'consultantSpecialty.value_per_duration',
-        'consultant.id',
-        'consultant.name',
-        'specialty.id',
-        'specialty.name_specialty',
-      ])
       .where('consultant.id = :id', { id: dataUser });
 
     const consultations = await query.getMany();
@@ -453,10 +431,8 @@ export class ConsultationService {
     }
 
     const formattedData = consultations.map((consultation) => {
-      const localDateTime = this.dateUtilsService.getZonedDate(
-        consultation.appoinment_date_time,
-        timeZone,
-      );
+      const localDateTime = DateTime.fromISO(consultation.appoinment_date_time.toISOString(), { zone: 'utc' });
+      const zonedDateTime = localDateTime.setZone(timeZone);
       return{
       id: consultation.id,
       customer: {
@@ -490,8 +466,8 @@ export class ConsultationService {
         },
       },
       localDateTime: {
-          date: localDateTime.toISOString().split('T')[0],
-          time: localDateTime.toTimeString().split(' ')[0].slice(0, 5),
+          date: zonedDateTime.toISODate(),
+          time: zonedDateTime.toFormat('HH:mm'),
         },
       status: consultation.status,
       attended: consultation.attended,
