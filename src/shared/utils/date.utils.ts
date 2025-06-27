@@ -9,8 +9,7 @@ export class DateUtilsService {
   
   getZonedDate(date: Date = new Date(), clientTimeZone?: string): Date {
     const timeZoneToUse = clientTimeZone || 'UTC';
-    console.log(`Recebido: date=${date}, timeZone=${timeZoneToUse}`);
-  
+ 
     const zonedDate = DateTime.fromJSDate(date, { zone: timeZoneToUse });
   
     if (!zonedDate.isValid) {
@@ -18,7 +17,6 @@ export class DateUtilsService {
       return date;
     }
   
-    console.log(`Convertido para ${timeZoneToUse}: ${zonedDate.toISO()}`);
     return zonedDate.toJSDate();
   }
 
