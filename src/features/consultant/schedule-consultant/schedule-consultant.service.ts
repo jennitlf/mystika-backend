@@ -14,6 +14,7 @@ import { ScheduleException } from 'src/shared/entities/schedule_exception.entity
 import { DateUtilsService } from '../../../shared/utils/date.utils';
 import { Consultation } from 'src/shared/entities/consultation.entity';
 import { toZonedTime, formatInTimeZone } from 'date-fns-tz';
+import { DateTime } from 'luxon';
 
 @Injectable()
 export class ScheduleConsultantService {
@@ -200,8 +201,12 @@ export class ScheduleConsultantService {
       const localEndDateTimeString = `${dateISO}T${hour_end}`;
       console.log(`String de data/hora de início local: ${localStartDateTimeString}, String de data/hora de término local: ${localEndDateTimeString}`);
   
-      const date_time_initial_obj = toZonedTime(localStartDateTimeString, timeZone);
-      const date_time_end_obj = toZonedTime(localEndDateTimeString, timeZone);
+      const date_time_initial_obj = DateTime.fromISO(localStartDateTimeString, {
+        zone: timeZone,
+      }).toUTC().toJSDate();
+      const date_time_end_obj = DateTime.fromISO(localEndDateTimeString, {
+        zone: timeZone,
+      }).toUTC().toJSDate();
       console.log(`Hora de início convertida (para armazenamento): ${date_time_initial_obj.toISOString()}`);
       console.log(`Hora de término convertida (para armazenamento): ${date_time_end_obj.toISOString()}`);
   
