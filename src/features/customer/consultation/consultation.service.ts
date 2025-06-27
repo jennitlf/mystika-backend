@@ -207,10 +207,8 @@ export class ConsultationService {
     const [data, total] = await query.getManyAndCount();
   
     const formattedData = data.map((consultation) => {
-      const localDateTime = this.dateUtilsService.getZonedDate(
-        consultation.appoinment_date_time,
-        timeZone,
-      );
+      const localDateTime = DateTime.fromISO(consultation.appoinment_date_time.toISOString(), { zone: 'utc' });
+      const zonedDateTime = localDateTime.setZone(timeZone);
   
       return {
         id: consultation.id,
@@ -243,8 +241,8 @@ export class ConsultationService {
           },
         },
         localDateTime: {
-          date: localDateTime.toISOString().split('T')[0],
-          time: localDateTime.toTimeString().split(' ')[0].slice(0, 5),
+          date: zonedDateTime.toISODate(),
+          time: zonedDateTime.toFormat('HH:mm'),
         },
         status: consultation.status,
       };
@@ -360,10 +358,8 @@ export class ConsultationService {
 
     const formattedData = consultations.map((consultation) => {
 
-      const localDateTime = this.dateUtilsService.getZonedDate(
-        consultation.appoinment_date_time,
-        timeZone,
-      );
+      const localDateTime = DateTime.fromISO(consultation.appoinment_date_time.toISOString(), { zone: 'utc' });
+      const zonedDateTime = localDateTime.setZone(timeZone);
 
       return {
       id: consultation.id,
@@ -396,8 +392,8 @@ export class ConsultationService {
         },
       },
       localDateTime: {
-          date: localDateTime.toISOString().split('T')[0],
-          time: localDateTime.toTimeString().split(' ')[0].slice(0, 5),
+        date: zonedDateTime.toISODate(),
+        time: zonedDateTime.toFormat('HH:mm'),
         },
       status: consultation.status,
       attended: consultation.attended,
@@ -531,12 +527,11 @@ export class ConsultationService {
       fullConsultation.customer &&
       fullConsultation.scheduleConsultant?.consultantSpecialty?.consultant
     ) {
-      const localDateTime = this.dateUtilsService.getZonedDate(
-        fullConsultation.appoinment_date_time,
-        timeZone,
-      );
-      const formattedDate = localDateTime.toISOString().split('T')[0];
-      const formattedTime = localDateTime.toTimeString().split(' ')[0].slice(0, 5);
+      const localDateTime = DateTime.fromISO(consultation.appoinment_date_time.toISOString(), { zone: 'utc' });
+      const zonedDateTime = localDateTime.setZone(timeZone);
+
+      const formattedDate = zonedDateTime.toISODate();
+      const formattedTime = zonedDateTime.toFormat('HH:mm');
   
       await this.emailService.sendConsultationCanceledByCustomerToConsultant(
         fullConsultation.scheduleConsultant.consultantSpecialty.consultant.email,
@@ -580,16 +575,14 @@ export class ConsultationService {
     const [consultations, totalCount] = await queryBuilder.getManyAndCount();
   
     const data = consultations.map((consultation) => {
-      const localDateTime = this.dateUtilsService.getZonedDate(
-        consultation.appoinment_date_time,
-        timeZone,
-      );
+      const localDateTime = DateTime.fromISO(consultation.appoinment_date_time.toISOString(), { zone: 'utc' });
+      const zonedDateTime = localDateTime.setZone(timeZone);
   
       return {
         ...consultation,
         localDateTime: {
-          date: localDateTime.toISOString().split('T')[0],
-          time: localDateTime.toTimeString().split(' ')[0].slice(0, 5),
+          date: zonedDateTime.toISODate(),
+          time: zonedDateTime.toFormat('HH:mm'),
         },
       };
     });
@@ -650,12 +643,11 @@ export class ConsultationService {
     const updatedConsultation =
       await this.consultationRepository.save(consultation);
   
-    const localDateTime = this.dateUtilsService.getZonedDate(
-      updatedConsultation.appoinment_date_time,
-      timeZone,
-    );
-    const formattedDate = localDateTime.toISOString().split('T')[0];
-    const formattedTime = localDateTime.toTimeString().split(' ')[0].slice(0, 5);
+    const localDateTime = DateTime.fromISO(consultation.appoinment_date_time.toISOString(), { zone: 'utc' });
+    const zonedDateTime = localDateTime.setZone(timeZone);
+
+    const formattedDate = zonedDateTime.toISODate();
+    const formattedTime = zonedDateTime.toFormat('HH:mm');
   
     if (updateConsultationDto.status === 'realizada') {
       await this.emailService.sendConsultationCompletedToCustomer(
