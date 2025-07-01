@@ -10,16 +10,21 @@ export class OwnershipGuard implements CanActivate {
   canActivate(context: ExecutionContext): boolean {
     const request = context.switchToHttp().getRequest();
     const user = request.user;
-    const userIdFromRoute = request.params.id;
+    const userIdFromRoute = parseInt(request.params.id, 10);
+
     if (user.role === 'adm') {
-      // eslint-disable-next-line prettier/prettier
-      return
+      return true;
     }
-    if (user.role !== 'user' && user.id !== userIdFromRoute) {
-      throw new ForbiddenException(
-        'Acesso negado: Você só pode acessar os seus próprios dados.',
-      );
+
+    if (
+      (user.role === 'consultant' || user.role === 'user') &&
+      user.id === userIdFromRoute
+    ) {
+      return true;
     }
-    return true;
+
+    throw new ForbiddenException(
+      'Acesso negado: Você só pode acessar os seus próprios dados.',
+    );
   }
 }
