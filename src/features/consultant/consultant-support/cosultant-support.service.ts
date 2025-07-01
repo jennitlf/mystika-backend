@@ -36,8 +36,81 @@ export class ConsultantSupportService {
     }
   }
 
-  findAll() {
-    return this.consultantSupportRepository.find();
+  async findAll(
+    page: number = 1,
+    limit: number = 10,
+    name?: string,
+    email?: string,
+    phone?: string,
+    title?: string,
+    content?: string,
+    status?: string,
+  ) {
+    page = isNaN(page) ? 1 : page;
+    limit = isNaN(limit) ? 10 : limit;
+  
+    const skip = (page - 1) * limit;
+  
+    const query = this.consultantSupportRepository
+      .createQueryBuilder('consultantSupport')
+      .leftJoinAndSelect('consultantSupport.consultant', 'consultant')
+      .leftJoinAndSelect('consultantSupport.adm', 'adm')
+      .select([
+        'consultantSupport.id',
+        'consultantSupport.email',
+        'consultantSupport.phone',
+        'consultantSupport.title',
+        'consultantSupport.content',
+        'consultantSupport.status',
+        'consultantSupport.createdAt',
+        'consultantSupport.updatedAt',
+        'consultant.name as consultant_name',
+        'adm.name as adm_name',
+      ]);
+  
+    if (name) {
+      query.andWhere('LOWER(consultant.name) LIKE :name', {
+        name: `%${name.toLowerCase()}%`,
+      });
+    }
+    if (email) {
+      query.andWhere('LOWER(consultantSupport.email) LIKE :email', {
+        email: `%${email.toLowerCase()}%`,
+      });
+    }
+    if (phone) {
+      query.andWhere('consultantSupport.phone LIKE :phone', { phone: `%${phone}%` });
+    }
+    if (title) {
+      query.andWhere('LOWER(consultantSupport.title) LIKE :title', {
+        title: `%${title.toLowerCase()}%`,
+      });
+    }
+    if (content) {
+      query.andWhere('LOWER(consultantSupport.content) LIKE :content', {
+        content: `%${content.toLowerCase()}%`,
+      });
+    }
+    if (status) {
+      query.andWhere('LOWER(consultantSupport.status) = :status', {
+        status: status.toLowerCase(),
+      });
+    }
+  
+    const [results, total] = await query
+      .orderBy('consultantSupport.createdAt', 'DESC')
+      .skip(skip)
+      .take(limit)
+      .getManyAndCount();
+  
+    return {
+      data: results,
+      meta: {
+        total,
+        page,
+        lastPage: Math.ceil(total / limit),
+      },
+    };
   }
 
   async findOne(id: number) {

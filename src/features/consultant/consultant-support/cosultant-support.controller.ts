@@ -5,16 +5,15 @@ import {
   Body,
   Param,
   Delete,
-  Put,
   UseGuards,
   Request,
+  Query,
+  Patch,
 } from '@nestjs/common';
 import { ConsultantSupportService } from './cosultant-support.service';
 import { CreateConsultantSupportDto } from 'src/shared/dtos/create-consultant-support.dto';
 import { UpdateConsultantSupportDto } from 'src/shared/dtos/update-consultant-support.dto'; 
 import { createRoleGuard } from 'src/auth/factories/role-guard.factory';
-import { ValidateUserGuard } from 'src/auth/guards/validate-user.guard';
-import { OwnershipOrAdminGuard } from 'src/auth/guards/ownership-or-admin.guard';
 import { OwnershipConsultantOrAdminGuard } from 'src/auth/guards/ownership-consultant-or-admin.guard';
 
 @Controller('consultant-support')
@@ -38,11 +37,29 @@ export class ConsultantSupportController {
 
   @UseGuards(createRoleGuard(['adm']))
   @Get()
-  findAll() {
-    return this.consultantSupportService.findAll();
+  async findAll(
+    @Query('page') page: number,
+    @Query('limit') limit: number,
+    @Query('name') name?: string,
+    @Query('email') email?: string,
+    @Query('phone') phone?: string,
+    @Query('title') title?: string,
+    @Query('content') content?: string,
+    @Query('status') status?: string,
+  ) {
+    return this.consultantSupportService.findAll(
+      page,
+      limit,
+      name,
+      email,
+      phone,
+      title,
+      content,
+      status,
+    );
   }
 
-  @UseGuards(createRoleGuard(['consultant', 'adm']))
+  @UseGuards(createRoleGuard(['consultant']))
   @Get('byUser')
   findAllByUser(@Request() req) {
     const userId = req.user.id;
@@ -56,7 +73,7 @@ export class ConsultantSupportController {
   }
 
   @UseGuards(createRoleGuard(['adm', 'consultant']), OwnershipConsultantOrAdminGuard)
-  @Put('record/:id')
+  @Patch('record/:id')
   update(
     @Param('id') id: string,
     @Body() updateConsultantSupportDto: UpdateConsultantSupportDto,
