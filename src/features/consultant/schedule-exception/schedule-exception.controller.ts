@@ -3,17 +3,14 @@ import {
   Get,
   Post,
   Body,
-  Patch,
   Param,
   Delete,
   Query,
   UseGuards,
-  Request
 } from '@nestjs/common';
 import { ScheduleExceptionService } from './schedule-exception.service';
 import CreateScheduleExceptionDto from 'src/shared/dtos/create-schedule-exception.dto';
 import { ApiBearerAuth, ApiQuery } from '@nestjs/swagger';
-import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
 import { createRoleGuard } from 'src/auth/factories/role-guard.factory';
 
 @ApiBearerAuth()

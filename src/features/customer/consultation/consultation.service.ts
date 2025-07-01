@@ -596,6 +596,7 @@ export class ConsultationService {
     timeZone: string,
     updateConsultationDto: any,
     consultantId: number,
+    role: string,
   ) {
     const consultation = await this.consultationRepository.preload({
       id: +consultationId,
@@ -626,11 +627,13 @@ export class ConsultationService {
       'consultantSpecialty.id',
       'consultant.id',
       'consultant.name',
+      'consultant.email',
       'specialty.name_specialty',
     ])
     .getOne();
     
-    if (
+    if (role === 'adm') {
+    } else if (
       !fullConsultationCheck ||
       fullConsultationCheck.scheduleConsultant?.consultantSpecialty?.consultant
         .id !== consultantId
@@ -648,30 +651,46 @@ export class ConsultationService {
 
     const formattedDate = zonedDateTime.toISODate();
     const formattedTime = zonedDateTime.toFormat('HH:mm');
-  
-    if (updateConsultationDto.status === 'realizada') {
-      await this.emailService.sendConsultationCompletedToCustomer(
-        fullConsultationCheck.customer.email,
-        fullConsultationCheck.customer.name,
-        fullConsultationCheck.scheduleConsultant.consultantSpecialty.consultant
-          .name,
-        fullConsultationCheck.scheduleConsultant.consultantSpecialty.specialty
-          .name_specialty,
-        this.dateUtilsService.formatDysplayDate(formattedDate),
-        formattedTime,
-      );
+    
+    if (updateConsultationDto.status === 'cancelada' && role === 'adm') {
+      await this.emailService.sendConsultationCancelledEmail(
+        fullConsultationCheck.scheduleConsultant.consultantSpecialty.consultant.email,
+        fullConsultationCheck.scheduleConsultant.consultantSpecialty.consultant.name,
+        fullConsultationCheck.id
+      )
+    } else if(updateConsultationDto.status === 'realizada' && role === 'adm'){
+      await this.emailService.sendConsultationCompletedEmail(
+        fullConsultationCheck.scheduleConsultant.consultantSpecialty.consultant.email,
+        fullConsultationCheck.scheduleConsultant.consultantSpecialty.consultant.name,
+        fullConsultationCheck.id
+      )
+    } else if (updateConsultationDto.status === 'realizada') {
+      if(role === 'consultant' || role === 'adm') {
+        await this.emailService.sendConsultationCompletedToCustomer(
+          fullConsultationCheck.customer.email,
+          fullConsultationCheck.customer.name,
+          fullConsultationCheck.scheduleConsultant.consultantSpecialty.consultant
+            .name,
+          fullConsultationCheck.scheduleConsultant.consultantSpecialty.specialty
+            .name_specialty,
+          this.dateUtilsService.formatDysplayDate(formattedDate),
+          formattedTime,
+        );
+      }
     } else if (updateConsultationDto.status === 'cancelada') {
-      await this.emailService.sendConsultationCanceledByConsultantToCustomer(
-        fullConsultationCheck.customer.email,
-        fullConsultationCheck.customer.name,
-        fullConsultationCheck.scheduleConsultant.consultantSpecialty.consultant
-          .name,
-        fullConsultationCheck.scheduleConsultant.consultantSpecialty.specialty
-          .name_specialty,
-        this.dateUtilsService.formatDysplayDate(formattedDate),
-        formattedTime,
-      );
-    } 
+      if(role === 'consultant' || role === 'adm') {
+        await this.emailService.sendConsultationCanceledByConsultantToCustomer(
+          fullConsultationCheck.customer.email,
+          fullConsultationCheck.customer.name,
+          fullConsultationCheck.scheduleConsultant.consultantSpecialty.consultant
+            .name,
+          fullConsultationCheck.scheduleConsultant.consultantSpecialty.specialty
+            .name_specialty,
+          this.dateUtilsService.formatDysplayDate(formattedDate),
+          formattedTime,
+        );
+      }
+    }
   
     return updatedConsultation;
   }

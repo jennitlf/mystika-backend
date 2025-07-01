@@ -23,7 +23,7 @@ export class UserModule implements NestModule {
       .forRoutes(
         { path: 'user/id/:id', method: RequestMethod.GET },
         { path: 'user', method: RequestMethod.GET },
-        { path: 'user/:id', method: RequestMethod.PUT },
+        { path: 'user/:id', method: RequestMethod.PATCH },
         { path: 'user/:id', method: RequestMethod.DELETE },
       );
   }

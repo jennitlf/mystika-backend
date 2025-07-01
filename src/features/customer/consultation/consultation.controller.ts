@@ -1,4 +1,3 @@
-// src/features/consultation/consultation.controller.ts
 import {
   Controller,
   Get,
@@ -97,7 +96,7 @@ export class ConsultationController {
     return result;
   }
 
-  @UseGuards(createRoleGuard(['consultant']))
+  @UseGuards(createRoleGuard(['consultant', 'adm']))
   @Patch('consultor/:id')
   updateByConsultant(
     @Param('id') id: string,
@@ -110,6 +109,7 @@ export class ConsultationController {
       timeZone,
       updateConsultationDto,
       req.user.id,
+      req.user.role,
     );
   }
 
