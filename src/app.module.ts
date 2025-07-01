@@ -16,6 +16,7 @@ import { ConsultantSupportModule } from './features/consultant/consultant-suppor
 import { CustomerSupportModule } from './features/customer/customer-support/customer-support.module';
 import { EmailModule } from './features/email/email.module';
 import { AwsS3Module } from './features/aws-s3/aws-s3.module';
+import { AdmAuthModule } from './auth/adm/adm-auth.module';
 
 @Module({
   imports: [
@@ -29,6 +30,7 @@ import { AwsS3Module } from './features/aws-s3/aws-s3.module';
     GeneralFindModule,
     UserModule,
     BaseAuthModule,
+    AdmAuthModule,
     ScheduleConsultantModule,
     ScheduleExceptionModule,
     ConsultationModule,
