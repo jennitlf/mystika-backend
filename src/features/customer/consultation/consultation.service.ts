@@ -1,4 +1,3 @@
-// src/features/consultation/consultation.service.ts
 import {
   BadRequestException,
   HttpException,
@@ -6,27 +5,73 @@ import {
   Injectable,
   NotFoundException,
   ForbiddenException,
+  InternalServerErrorException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Consultation } from 'src/shared/entities/consultation.entity';
+import { Consultation, ConsultationStatus } from '../../../shared/entities/consultation.entity';
 import { Repository } from 'typeorm';
-import { EmailService } from 'src/features/email/email.service';
-import { DateUtilsService } from 'src/shared/utils/date.utils';
-import { toZonedTime } from 'date-fns-tz';
+import { EmailService } from '../../email/email.service';
+import { DateUtilsService } from '../../../shared/utils/date.utils';
 import { DateTime } from 'luxon';
+import { CreatePaymentPixDto } from '../../../shared/dtos/create-payment-pix.dto';
+import { CreatePaymentCardDto } from '../../../shared/dtos/create-payment-card.dto';
+import { CreatePaymentBoletoDto } from '../../../shared/dtos/create-payment-boleto.dto';
+import { PaymentService } from '../../consultant/payment/payment.service';
+import { returnPix, returnCard, returnBoleto } from '../../../shared/types/return-payment.types';
+import { Payment, PaymentStatus } from '../../../shared/entities/payments.entity';
+import { PaymentCardDto } from '../../../shared/dtos/payment-card.dto';
+import { Customer } from 'src/shared/entities/customer.entity';
+import { PaymentBoletoDto } from 'src/shared/dtos/payment-boleto.dto';
+import { PaymentPixDto } from 'src/shared/dtos/payment-pix.dto';
 
 @Injectable()
 export class ConsultationService {
   constructor(
     @InjectRepository(Consultation)
     private readonly consultationRepository: Repository<Consultation>,
+    @InjectRepository(Payment)
+    private readonly paymentRepository: Repository<Payment>,
+    @InjectRepository(Customer)
+    private readonly customerRepository: Repository<Customer>,
     private readonly emailService: EmailService,
-    private readonly dateUtilsService: DateUtilsService, 
+    private readonly dateUtilsService: DateUtilsService,
+    private readonly paymentService: PaymentService,
   ) {}
+  async create(
+    timeZone: string,
+    dataUser: any,
+    createConsultationDto: any,
+    paymentMethod: 'pix',
+    paymentDetails: PaymentPixDto,
+  ): Promise<any>;
 
-  async create(timeZone: string, dataUser: any, createConsultationDto: any) {
+  async create(
+    timeZone: string,
+    dataUser: any,
+    createConsultationDto: any,
+    paymentMethod: 'boleto',
+    paymentDetails: PaymentBoletoDto,
+  ): Promise<any>;
+
+  async create(
+    timeZone: string,
+    dataUser: any,
+    createConsultationDto: any,
+    paymentMethod: 'card',
+    paymentDetails: PaymentCardDto,
+  ): Promise<any>;
+
+  async create(
+    timeZone: string, 
+    dataUser: any, 
+    createConsultationDto: any,
+    paymentMethod: string,
+    paymentDetails: PaymentPixDto | PaymentBoletoDto | PaymentCardDto ,
+  ) {
     const { id_schedule_consultant, appoinment_date_time } = createConsultationDto;
     const clientTimeZone = timeZone;
+
+    type possiblesReturns = returnPix | returnCard | returnBoleto;
 
     if (!clientTimeZone) {
       throw new HttpException(
@@ -39,6 +84,7 @@ export class ConsultationService {
 
     const appoinmentVerification = await this.consultationRepository
       .createQueryBuilder('consultation')
+      .leftJoinAndSelect('consultation.customer', 'customer') 
       .andWhere('consultation.id_customer = :id_customer', {
         id_customer: dataUser,
       })
@@ -57,9 +103,123 @@ export class ConsultationService {
         HttpStatus.CONFLICT,
       );
     }
+    
+    const customer = await this.customerRepository.findOne({ where: { id: dataUser } });
 
+    if (!customer) {
+      throw new HttpException(
+        'Customer not found for the provided ID.',
+        HttpStatus.NOT_FOUND,
+      );
+    }
+
+    let paymentResponse: possiblesReturns;
+
+    const customerNameParts = customer.name.split(' ');
+        const firstName = customerNameParts[0];
+        const lastName = customerNameParts.length > 1 ? customerNameParts[customerNameParts.length - 1] : undefined;
+
+    switch (paymentMethod) {
+      case 'pix':
+      const currentPixDetails = paymentDetails as PaymentPixDto;
+
+        const fullPaymentPixDto: CreatePaymentPixDto = {
+          transaction_amount: currentPixDetails.transaction_amount,
+          description: currentPixDetails.description,
+          payer: {
+            email: customer.email,
+            first_name: firstName,
+            last_name: lastName,
+            identification: {
+              type: 'CPF',
+              number: customer.cpf,
+            },
+          },
+        }
+
+        paymentResponse = await this.paymentService.pix(dataUser, fullPaymentPixDto);
+        break;
+
+      case 'boleto':
+        const currentBoletoDetails = paymentDetails as PaymentBoletoDto;
+
+        const fullPaymentBoletoDto: CreatePaymentBoletoDto = {
+          transaction_amount: currentBoletoDetails.transaction_amount,
+          description: currentBoletoDetails.description,
+          payer:{
+            email: customer.email,
+            first_name: firstName,
+            last_name: lastName,
+            identification: {
+              type: 'CPF',
+              number: customer.cpf,
+            },
+            address: {
+              zip_code: currentBoletoDetails.payer.address.zip_code,
+              street_name: currentBoletoDetails.payer.address.street_name,
+              street_number: currentBoletoDetails.payer.address.street_number,
+              neighborhood: currentBoletoDetails.payer.address.neighborhood,
+              city: currentBoletoDetails.payer.address.city,
+              federal_unit: currentBoletoDetails.payer.address.federal_unit,
+            }
+          }
+        }
+        
+
+        paymentResponse = await this.paymentService.boleto(dataUser, fullPaymentBoletoDto);
+        break;
+      case 'card':
+        const currentCardDetails = paymentDetails as PaymentCardDto;
+
+        const fullPaymentCardDto: CreatePaymentCardDto = {
+          transaction_amount: currentCardDetails.transaction_amount,
+          description: currentCardDetails.description,
+          token: currentCardDetails.token,
+          installments: 1,
+          payer: {
+            email: customer.email,
+            first_name: firstName,
+            last_name: lastName,
+            identification: {
+              type: 'CPF',
+              number: customer.cpf,
+            },
+          },
+        };
+
+        paymentResponse = await this.paymentService.card(dataUser, fullPaymentCardDto);
+        break;
+    }
+
+    let newConsultationStatus: ConsultationStatus;
+    if (paymentMethod === 'card'){
+      const statusCard = (paymentResponse as returnCard).status
+      if (
+        (paymentResponse as returnCard).status === PaymentStatus.PENDING ||
+        statusCard === PaymentStatus.IN_PROCESS ||
+        statusCard === PaymentStatus.authorized ||
+        statusCard === PaymentStatus.OTHER
+      ) {
+        newConsultationStatus = ConsultationStatus.PENDING_PAYMENT;
+      } else if (
+        statusCard === PaymentStatus.REJECTED ||
+        statusCard === PaymentStatus.CANCELED ||
+        statusCard === PaymentStatus.CHARGEBACK
+      ) {
+        newConsultationStatus = ConsultationStatus.PAYMENT_FAILURE;
+      } else if (statusCard === PaymentStatus.APPROVED) {
+        newConsultationStatus = ConsultationStatus.CONFIRMED;
+      } else if (statusCard === PaymentStatus.REFUNDED) {
+        newConsultationStatus = ConsultationStatus.CANCELED;
+      } else {
+        throw new InternalServerErrorException(
+          (`Status de pagamento '${statusCard}' não mapeado para status de consulta. Mantendo status atual.`)
+        );
+      }
+    }
     const consultationToSave = this.consultationRepository.create({
       id_customer: dataUser,
+      status: newConsultationStatus || ConsultationStatus.PENDING_PAYMENT,
       ...createConsultationDto,
       appoinment_date_time: appoinmentDateTimeForDb,
     });
@@ -98,50 +258,35 @@ export class ConsultationService {
       );
     }
 
-    const fullConsultation = await this.consultationRepository
+    await this.paymentService.updatePaymetAddIdConsultation(savedConsultation.id, paymentResponse.id)    
+
+    if(savedConsultation.status === ConsultationStatus.CONFIRMED) {
+      const newConsultation = await this.consultationRepository
       .createQueryBuilder('consultation')
-      .where('consultation.id = :id', { id: savedConsultation.id })
       .leftJoinAndSelect('consultation.customer', 'customer')
-      .leftJoinAndSelect(
-        'consultation.scheduleConsultant',
-        'scheduleConsultant',
-      )
-      .leftJoinAndSelect(
-        'scheduleConsultant.consultantSpecialty',
-        'consultantSpecialty',
-      )
+      .leftJoinAndSelect('consultation.scheduleConsultant', 'scheduleConsultant')
+      .leftJoinAndSelect('scheduleConsultant.consultantSpecialty', 'consultantSpecialty')
       .leftJoinAndSelect('consultantSpecialty.consultant', 'consultant')
       .leftJoinAndSelect('consultantSpecialty.specialty', 'specialty')
+      .where('consultation.id = :id', { id: savedConsultation.id })
       .getOne();
 
-    if (
-      fullConsultation &&
-      fullConsultation.customer &&
-      fullConsultation.scheduleConsultant?.consultantSpecialty?.consultant &&
-      fullConsultation.scheduleConsultant.consultantSpecialty.specialty
-    ) {
-
-      const appointmentDateTimeUTC = new Date(fullConsultation.appoinment_date_time);
-      const consultationDateTimeInClientZone = toZonedTime(appointmentDateTimeUTC, clientTimeZone);
-
-      const formattedDate = consultationDateTimeInClientZone.toLocaleDateString('pt-BR');
-
-      const hours = consultationDateTimeInClientZone.getHours().toString().padStart(2, '0');
-      const minutes = consultationDateTimeInClientZone.getMinutes().toString().padStart(2, '0');
-      const formattedTime = `${hours}:${minutes}`;
+      const localDateTime = DateTime.fromISO(newConsultation.appoinment_date_time.toISOString(), { zone: 'utc' });
+      const zonedDateTime = localDateTime.setZone(timeZone);
 
       await this.emailService.sendNewConsultationScheduledToConsultant(
-        fullConsultation.scheduleConsultant.consultantSpecialty.consultant.email,
-        fullConsultation.scheduleConsultant.consultantSpecialty.consultant.name,
-        fullConsultation.customer.name,
-        fullConsultation.scheduleConsultant.consultantSpecialty.specialty
-          .name_specialty,
-        formattedDate,
-        formattedTime,
-      );
+        newConsultation.scheduleConsultant.consultantSpecialty.consultant.email,
+        newConsultation.scheduleConsultant.consultantSpecialty.consultant.name,
+        newConsultation.customer.name,
+        newConsultation.scheduleConsultant.consultantSpecialty.specialty.name_specialty,
+        zonedDateTime
+      )
     }
 
-    return savedConsultation;
+    return {
+      consultation: savedConsultation,
+      payment: paymentResponse
+    };
 }
   
   async findAll(
@@ -418,7 +563,8 @@ export class ConsultationService {
       )
       .innerJoinAndSelect('consultantSpecialty.consultant', 'consultant')
       .innerJoinAndSelect('consultantSpecialty.specialty', 'specialty')
-      .where('consultant.id = :id', { id: dataUser });
+      .where('consultant.id = :id', { id: dataUser })
+      .andWhere('consultation.status == :status', { status: ConsultationStatus.CONFIRMED });
 
     const consultations = await query.getMany();
 
@@ -496,13 +642,13 @@ export class ConsultationService {
       );
     }
   
-    if (consultation.status !== 'pendente') {
+    if (consultation.status !== ConsultationStatus.CONFIRMED) {
       throw new BadRequestException(
-        'Somente consultas com status "pendente" podem ser canceladas pelo cliente.',
+        `Somente consultas com status ${ConsultationStatus.CONFIRMED} podem ser canceladas pelo cliente.`,
       );
     }
   
-    consultation.status = 'cancelada';
+    consultation.status = ConsultationStatus.CANCELED;
     const updatedConsultation =
       await this.consultationRepository.save(consultation);
   
@@ -587,6 +733,89 @@ export class ConsultationService {
       };
     });
   
+    return { data, total: totalCount };
+  }
+
+  async findConsultationsByConsultantIdPaginated(
+    timeZone: string,
+    consultantId: number,
+    page: number,
+    limit: number,
+  ): Promise<{ data: any[]; total: number }> {
+    const skip = (page - 1) * limit;
+
+    const queryBuilder = this.consultationRepository
+      .createQueryBuilder('consultation')
+      .innerJoinAndSelect('consultation.customer', 'customer')
+      .innerJoinAndSelect(
+        'consultation.scheduleConsultant',
+        'scheduleConsultant',
+      )
+      .innerJoinAndSelect(
+        'scheduleConsultant.consultantSpecialty',
+        'consultantSpecialty',
+      )
+      .innerJoinAndSelect('consultantSpecialty.consultant', 'consultant')
+      .innerJoinAndSelect('consultantSpecialty.specialty', 'specialty')
+      .where('consultant.id = :consultantId', { consultantId })
+      .andWhere('consultation.status = :status', {
+        status: ConsultationStatus.CONFIRMED,
+      })
+      .orderBy('consultation.appoinment_date_time', 'DESC')
+      .skip(skip)
+      .take(limit);
+
+    const [consultations, totalCount] = await queryBuilder.getManyAndCount();
+
+    const data = consultations.map((consultation) => {
+      const localDateTime = DateTime.fromISO(
+        consultation.appoinment_date_time.toISOString(),
+        { zone: 'utc' },
+      );
+      const zonedDateTime = localDateTime.setZone(timeZone);
+      return {
+        id: consultation.id,
+        customer: {
+          id: consultation.customer.id,
+          name: consultation.customer.name,
+          email: consultation.customer.email,
+          phone: consultation.customer.phone,
+        },
+        schedule_consultant: {
+          id: consultation.scheduleConsultant.id,
+          consultant_specialty: {
+            id: consultation.scheduleConsultant.consultantSpecialty.id,
+            consultant: {
+              id: consultation.scheduleConsultant.consultantSpecialty
+                .consultant.id,
+              name: consultation.scheduleConsultant.consultantSpecialty
+                .consultant.name,
+            },
+            specialty: {
+              id: consultation.scheduleConsultant.consultantSpecialty.specialty
+                .id,
+              name_specialty:
+                consultation.scheduleConsultant.consultantSpecialty.specialty
+                  .name_specialty,
+            },
+            value_per_duration:
+              consultation.scheduleConsultant.consultantSpecialty
+                .value_per_duration,
+            duration:
+              consultation.scheduleConsultant.consultantSpecialty.duration,
+          },
+        },
+        localDateTime: {
+          date: zonedDateTime.toISODate(),
+          time: zonedDateTime.toFormat('HH:mm'),
+        },
+        status: consultation.status,
+        attended: consultation.attended,
+        created_at: consultation.created_at,
+        updated_at: consultation.updated_at,
+      };
+    });
+
     return { data, total: totalCount };
   }
   
@@ -695,6 +924,118 @@ export class ConsultationService {
     return updatedConsultation;
   }
   
+  async updadeStatusbUpdatePayment(consultationId: number) {
+ 
+    const consultation = await this.consultationRepository.findOne({
+      where: { id: consultationId },
+      relations: ['payments'],
+    });
+
+    if (!consultation) {
+      throw new InternalServerErrorException('Consulta não encontrada.');
+    }
+
+    let payment: Payment | null = null;
+    if (consultation.payments && consultation.payments.length > 0) {
+      const sortedPayments = consultation.payments.sort(
+        (a, b) => b.createdAt.getTime() - a.createdAt.getTime(),
+      );
+      payment = sortedPayments[0];
+    }
+
+    if (!payment) {
+      throw new InternalServerErrorException('Pagamento não encontrado para esta consulta.');
+    }
+
+    let newConsultationStatus: ConsultationStatus;
+
+    if (
+      payment.status === PaymentStatus.PENDING ||
+      payment.status === PaymentStatus.IN_PROCESS ||
+      payment.status === PaymentStatus.authorized ||
+      payment.status === PaymentStatus.OTHER
+    ) {
+      newConsultationStatus = ConsultationStatus.PENDING_PAYMENT;
+    } else if (
+      payment.status === PaymentStatus.REJECTED ||
+      payment.status === PaymentStatus.CANCELED ||
+      payment.status === PaymentStatus.CHARGEBACK
+    ) {
+      newConsultationStatus = ConsultationStatus.PAYMENT_FAILURE;
+    } else if (payment.status === PaymentStatus.APPROVED) {
+      newConsultationStatus = ConsultationStatus.CONFIRMED;
+    } else if (payment.status === PaymentStatus.REFUNDED) {
+      newConsultationStatus = ConsultationStatus.CANCELED;
+    } else {
+      throw new InternalServerErrorException(
+        (`Status de pagamento '${payment.status}' não mapeado para status de consulta. Mantendo status atual.`)
+      );
+    }
+
+    if (consultation.status !== newConsultationStatus) {
+      await this.consultationRepository.update(
+        consultation.id,
+        { status: newConsultationStatus },
+      );
+      const updatedConsultation = await this.consultationRepository.findOne({
+        where: { id: consultation.id },
+        relations: [
+          'payments',
+          'customer',
+          'scheduleConsultant',
+          'scheduleConsultant.consultant',
+          'scheduleConsultant.consultantSpecialty',
+          'scheduleConsultant.consultantSpecialty.consultant',
+          'scheduleConsultant.consultantSpecialty.specialty',
+        ],
+      });
+
+      if (
+        updatedConsultation &&
+        updatedConsultation.customer && updatedConsultation.customer.email && updatedConsultation.customer.name &&
+        updatedConsultation.scheduleConsultant &&
+        updatedConsultation.scheduleConsultant.consultantSpecialty.consultant &&
+        updatedConsultation.scheduleConsultant.consultantSpecialty &&
+        updatedConsultation.scheduleConsultant.consultantSpecialty.specialty
+      ) {
+        const consultantName = updatedConsultation.scheduleConsultant.consultantSpecialty.consultant.name;
+        const specialtyName = updatedConsultation.scheduleConsultant.consultantSpecialty.specialty.name_specialty; 
+
+        await this.emailService.sendConsultationStatusUpdateEmail(
+          updatedConsultation.customer.email,
+          updatedConsultation.customer.name,
+          updatedConsultation.id,
+          newConsultationStatus,
+          updatedConsultation.appoinment_date,
+          updatedConsultation.appoinment_time,
+          consultantName,
+          specialtyName,
+        );
+      } else {
+          console.warn(`[ConsultationService] Dados incompletos para enviar e-mail de atualização de status para a consulta ${consultationId}. Certifique-se de que todas as relações (cliente, consultor, especialidade) foram carregadas corretamente.`);
+      }
+
+      if (
+        updatedConsultation &&
+        updatedConsultation.status === ConsultationStatus.CONFIRMED &&
+        updatedConsultation.customer &&
+        updatedConsultation.scheduleConsultant?.consultantSpecialty?.consultant &&
+        updatedConsultation.scheduleConsultant.consultantSpecialty.specialty
+      ) {  
+        await this.emailService.sendNewConsultationScheduledToConsultant(
+          updatedConsultation.scheduleConsultant.consultantSpecialty.consultant.email,
+          updatedConsultation.scheduleConsultant.consultantSpecialty.consultant.name,
+          updatedConsultation.customer.name,
+          updatedConsultation.scheduleConsultant.consultantSpecialty.specialty
+            .name_specialty,
+        );
+      }
+
+      return updatedConsultation;
+    }
+
+    return consultation;
+  }
 
   async remove(id: string) {
     const consultation = await this.consultationRepository.findOne({

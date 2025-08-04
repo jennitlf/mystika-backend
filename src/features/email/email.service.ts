@@ -1,5 +1,7 @@
 import { Injectable } from '@nestjs/common';
+import { DateTime } from 'luxon';
 import * as nodemailer from 'nodemailer';
+import { ConsultationStatus } from 'src/shared/entities/consultation.entity';
 
 @Injectable()
 export class EmailService {
@@ -133,17 +135,29 @@ async sendWelcomeEmailToAdmin(adminEmail: string, adminName: string) {
     consultantName: string,
     customerName: string,
     nameSpecialty: string,
-    appointmentDate: string,
-    appointmentTime: string,
+    zonedDateTime?: DateTime,
   ) {
+    let dateTimeDetails = '';
+    if (zonedDateTime) {
+      const appointmentDateFormatted = zonedDateTime.toFormat('dd/MM/yyyy');
+      const appointmentTimeFormatted = zonedDateTime.toFormat('HH:mm');
+      dateTimeDetails = `
+        <li><strong>Data:</strong> ${appointmentDateFormatted}</li>
+        <li><strong>Hora:</strong> ${appointmentTimeFormatted}</li>
+      `;
+    } else {
+      dateTimeDetails = `
+        <li>Para saber mais detalhes da data e hora, acesse "Minhas Consultas" no menu.</li>
+      `;
+    }
+
     const subject = `🎉 Nova Consulta Agendada! - ${nameSpecialty}`;
     const htmlContent = `
       <p>Prezado(a) <strong>${consultantName}</strong>,</p>
       <p>Temos uma excelente notícia! Uma nova consulta de <strong>${nameSpecialty}</strong> foi agendada em sua agenda.</p>
       <ul>
         <li><strong>Cliente:</strong> ${customerName}</li>
-        <li><strong>Data:</strong> ${appointmentDate}</li>
-        <li><strong>Hora:</strong> ${appointmentTime}</li>
+        ${dateTimeDetails}
       </ul>
       <p>Por favor, verifique sua agenda para confirmar os detalhes.</p>
       <p>Desejamos uma ótima consulta!</p>
@@ -242,6 +256,77 @@ async sendWelcomeEmailToAdmin(adminEmail: string, adminName: string) {
       );
     }
   }
+ /**
+   * Notificação de atualização de status da consulta após atualização do status do pagamento
+   */
+ async sendConsultationStatusUpdateEmail(
+  customerEmail: string,
+  customerName: string,
+  consultationId: number,
+  newStatus: ConsultationStatus,
+  appointmentDate: Date,
+  appointmentTime: string,
+  consultantName: string,
+  specialtyName: string,
+) {
+  const subject = `📢 Atualização do Status da Sua Consulta #${consultationId} - Mystika Esoterismo`;
+
+  const formatDate = (date: Date): string => {
+    if (!date) return 'Não informada';
+    return new Intl.DateTimeFormat('pt-BR').format(date);
+  };
+
+  const htmlContent = `
+    <p>Olá, <strong>${customerName}</strong>!</p>
+    <p>Gostaríamos de informar que o status da sua consulta (ID: #${consultationId}) foi atualizado.</p>
+    <p><strong>Novo Status:</strong> <span style="font-weight: bold; color: #7A3F9D;">${this.mapConsultationStatusToFriendlyText(newStatus)}</span></p>
+    <p>Detalhes da Consulta:</p>
+    <ul>
+      <li><strong>Consultor(a):</strong> ${consultantName}</li>
+      <li><strong>Especialidade:</strong> ${specialtyName}</li>
+      <li><strong>Data Agendada:</strong> ${formatDate(appointmentDate)}</li>
+      <li><strong>Hora Agendada:</strong> ${appointmentTime}</li>
+    </ul>
+    <p>Por favor, acesse sua área de cliente em nossa plataforma para mais detalhes e próximos passos:</p>
+    <p><a href="${process.env.APP_FRONTEND_URL}/minhas-consultas" style="background-color: #7A3F9D; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; display: inline-block;">Ver Minhas Consultas</a></p>
+    <p>Estamos à disposição para qualquer dúvida.</p>
+    <p>Com Luz e Carinho,</p>
+    <p>Equipe Mystika Esoterismo</p>
+    <p><small>Este é um e-mail automático, por favor, não responda.</small></p>
+  `;
+
+  try {
+    await this.transporter.sendMail({
+      from: `"Mystika Esoterismo" <${process.env.EMAIL_USER}>`,
+      to: customerEmail,
+      subject: subject,
+      html: htmlContent,
+    });
+    console.log(`[EmailService] E-mail de atualização de status da consulta #${consultationId} enviado para ${customerEmail}. Novo status: ${newStatus}`);
+  } catch (error) {
+    console.error(
+      `[EmailService] Erro ao enviar e-mail de atualização de status da consulta #${consultationId} para ${customerEmail}:`,
+      error,
+    );
+  }
+}
+
+private mapConsultationStatusToFriendlyText(status: ConsultationStatus): string {
+  switch (status) {
+    case ConsultationStatus.PENDING_PAYMENT:
+      return 'Pendente Pagamento';
+    case ConsultationStatus.CONFIRMED:
+      return 'Confirmada';
+    case ConsultationStatus.COMPLETED:
+      return 'Realizada';
+    case ConsultationStatus.PAYMENT_FAILURE:
+      return 'Falha no Pagamento';
+    case ConsultationStatus.CANCELED:
+      return 'Cancelada';
+    default:
+      return status;
+  }
+}
 
   // --- MÉTODO PARA O CONSULTOR ---
 

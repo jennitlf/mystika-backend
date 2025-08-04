@@ -17,6 +17,11 @@ export abstract class BaseAuthService<T> {
     const processedDto = { ...createDto };
     let { password, role, email, cpf, ...rest } = processedDto;
 
+    if (email) {
+      email = email.toLowerCase();
+      processedDto.email = email;
+    }
+
     if (cpf) {
       cpf = cpf.replace(/\D/g, ''); 
       processedDto.cpf = cpf; 
@@ -113,11 +118,13 @@ export abstract class BaseAuthService<T> {
   }
 
   protected async validateEmail(email: string) {
+    const lowercasedEmail = email.toLowerCase();
+
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) {
+    if (!emailRegex.test(lowercasedEmail)) {
       throw new BadRequestException('E-mail inválido');
     }
-    const emailExists = await (this.service as any).findByEmailforRegister(email);
+    const emailExists = await (this.service as any).findByEmailforRegister(lowercasedEmail);
     if (emailExists) {
       throw new HttpException('E-mail já cadastrado', HttpStatus.BAD_REQUEST);
     }
@@ -158,7 +165,8 @@ export abstract class BaseAuthService<T> {
   }
 
   public async validateUser(email: string, password: string) {
-    const user = await (this.service as any).findByEmail(email);
+    const lowercasedEmail = email.toLowerCase();
+    const user = await (this.service as any).findByEmail(lowercasedEmail);
     if (user && (await bcrypt.compare(password, user.password))) {
       const { password, ...result } = user;
       return result;
@@ -172,6 +180,16 @@ export abstract class BaseAuthService<T> {
       name: user.name,
       role: user.role,
     };
-    return { access_token: this.jwtService.sign(payload) };
+    const accessToken = this.jwtService.sign(payload);
+    const decodedToken: any = this.jwtService.decode(accessToken);
+    const expiresInSeconds = decodedToken.exp;
+    const issuedAtSeconds = decodedToken.iat;
+    const expiresInMs = expiresInSeconds * 1000;
+    const issuedAtMs = issuedAtSeconds * 1000;
+    return { 
+      access_token: accessToken,
+      expires_in: expiresInMs,
+      issued_at: issuedAtMs,
+    };
   }
 }

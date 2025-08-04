@@ -1,13 +1,14 @@
 import {
   Entity,
-  Column,
   PrimaryGeneratedColumn,
-  OneToMany,
+  Column,
   CreateDateColumn,
   UpdateDateColumn,
+  OneToMany,
 } from 'typeorm';
 import { Consultation } from './consultation.entity';
 import { CustomerSupport } from './customer_support.entity';
+import { PaymentMethodsCustomer } from './payment_methods_customer.entity';
 
 @Entity('customer')
 export class Customer {
@@ -22,6 +23,15 @@ export class Customer {
     default: 'NaN',
   })
   name: string;
+
+  @Column({
+    name: 'cpf',
+    nullable: false,
+    type: 'varchar',
+    length: 11,
+    default: 'NaN',
+  })
+  cpf: string;
 
   @Column({
     name: 'phone',
@@ -69,6 +79,16 @@ export class Customer {
   })
   role: string;
 
+  @Column({
+    name: 'mercadopago_customer_id',
+    nullable: true,
+    type: 'varchar',
+    length: 255,
+    unique: true,
+    default: null,
+  })
+  mercadopago_customer_id: string;
+
   @CreateDateColumn({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
   created_at: Date;
 
@@ -87,4 +107,10 @@ export class Customer {
     (customerSupport) => customerSupport.customer,
   )
   customerSupport: CustomerSupport[];
+
+  @OneToMany(
+    () => PaymentMethodsCustomer,
+    (paymentMethod) => paymentMethod.customer,
+  )
+  paymentMethods: PaymentMethodsCustomer[];
 }

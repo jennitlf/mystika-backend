@@ -1,4 +1,4 @@
-import { Module, MiddlewareConsumer, RequestMethod } from '@nestjs/common';
+import { Module, MiddlewareConsumer, RequestMethod, forwardRef } from '@nestjs/common';
 import { ConsultationService } from './consultation.service';
 import { ConsultationController } from './consultation.controller';
 import { TypeOrmModule } from '@nestjs/typeorm';
@@ -9,11 +9,14 @@ import { DecodeTokenMiddleware } from 'src/middlewares/decode-token.moddleware';
 import { CustomerSupportModule } from '../customer-support/customer-support.module';
 import { EmailService } from 'src/features/email/email.service';
 import { DateUtilsService } from 'src/shared/utils/date.utils';
+import { PaymentModule } from 'src/features/consultant/payment/payment.module';
+import { Payment } from 'src/shared/entities/payments.entity';
 
 @Module({
   imports: [
     CustomerSupportModule,
-    TypeOrmModule.forFeature([Consultation, ConsultantSpecialty, Customer]),
+    TypeOrmModule.forFeature([Consultation, ConsultantSpecialty, Customer, Payment]),
+    forwardRef(() => PaymentModule),
   ],
   controllers: [ConsultationController],
   providers: [ConsultationService, EmailService, DateUtilsService],

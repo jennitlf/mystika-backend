@@ -11,12 +11,12 @@ import {
   Patch,
 } from '@nestjs/common';
 import { ConsultationService } from './consultation.service';
-import { CreateConsultationDto } from 'src/shared/dtos/create-consultation.dto';
 import { UpdateConsultationDto } from 'src/shared/dtos/update-consultation.dto';
 import { ApiBearerAuth, ApiQuery } from '@nestjs/swagger';
 import { createRoleGuard } from 'src/auth/factories/role-guard.factory';
 import { OwnershipOrAdminGuard } from 'src/auth/guards/ownership-or-admin.guard';
 import { PaginationQueryDto } from 'src/shared/dtos/pagination-query.dto';
+import { ConsultationWithPaymentPix, ConsultationWithPaymentCard, ConsultationWithPaymentBoleto } from 'src/shared/dtos/consultation-with-payment.dto';
 
 @ApiBearerAuth()
 @Controller('consultation/:timeZone')
@@ -24,17 +24,57 @@ export class ConsultationController {
   constructor(private readonly consultationService: ConsultationService) {}
 
   @UseGuards(createRoleGuard(['user']))
-  @Post()
-  create(
+  @Post('pix')
+  createPix(
     @Param('timeZone') timeZone: string,
     @Request() req,
-    @Body() createConsultationDto: CreateConsultationDto,
+    @Body() consultationWithPayment: ConsultationWithPaymentPix,
   ) {
     const dataUser = req.user.id;
+    const payment_method = 'pix'
+    const { createConsultationDto, paymentDetails } = consultationWithPayment;
     return this.consultationService.create(
       decodeURIComponent(timeZone),
       dataUser,
       createConsultationDto,
+      payment_method,
+      paymentDetails
+    );
+  }
+  @UseGuards(createRoleGuard(['user']))
+  @Post('card')
+  createBoleto(
+    @Param('timeZone') timeZone: string,
+    @Request() req,
+    @Body() consultationWithPayment: ConsultationWithPaymentCard,
+  ) {
+    const dataUser = req.user.id;
+    const payment_method = 'card'
+    const { createConsultationDto, paymentDetails } = consultationWithPayment;
+    return this.consultationService.create(
+      decodeURIComponent(timeZone),
+      dataUser,
+      createConsultationDto,
+      payment_method,
+      paymentDetails
+    );
+  }
+  @UseGuards(createRoleGuard(['user']))
+  @Post('boleto')
+  createCard(
+    @Param('timeZone') timeZone: string,
+    @Request() req,
+    @Body() consultationWithPayment: ConsultationWithPaymentBoleto,
+  ) {
+    const dataUser = req.user.id;
+     const payment_method = 'boleto'
+    const { createConsultationDto, paymentDetails } = consultationWithPayment;
+    return this.consultationService.create(
+      decodeURIComponent(timeZone),
+      dataUser,
+      createConsultationDto,
+      payment_method,
+      paymentDetails
     );
   }
 
@@ -69,31 +109,6 @@ export class ConsultationController {
       page,
       limit,
     );
-  }
-
-  @UseGuards(
-    createRoleGuard(['adm', 'user', 'consultant']),
-    OwnershipOrAdminGuard,
-  )
-  @Get('byUserId')
-  async findOne(@Param('timeZone') timeZone: string, @Request() req) {
-    const dataUser = req.user.id;
-    const result = await this.consultationService.findOne(
-      decodeURIComponent(timeZone),
-      dataUser,
-    );
-    return result;
-  }
-
-  @UseGuards(createRoleGuard(['consultant']))
-  @Get('byConsultorId')
-  async findByConsultorId(@Param('timeZone') timeZone: string, @Request() req) {
-    const dataUser = req.user.id;
-    const result = await this.consultationService.findOneByIdConsultant(
-      decodeURIComponent(timeZone),
-      dataUser,
-    );
-    return result;
   }
 
   @UseGuards(createRoleGuard(['consultant', 'adm']))
@@ -141,6 +156,32 @@ export class ConsultationController {
       await this.consultationService.findConsultationsByUserIdPaginated(
         decodeURIComponent(timeZone),
         userId,
+        page,
+        limit,
+      );
+    return {
+      data: data,
+      totalCount: total,
+      currentPage: page,
+      limit: limit,
+      totalPages: Math.ceil(total / limit),
+    };
+  }
+
+  @UseGuards(createRoleGuard(['consultant']))
+  @Get('byConsultantId/paginated')
+  async getConsultationsByConsultantIdPaginated(
+    @Param('timeZone') timeZone: string,
+    @Request() req,
+    @Query() paginationQuery: PaginationQueryDto,
+  ) {
+    const consultantId = req.user.id;
+    const { page, limit } = paginationQuery;
+
+    const { data, total } =
+      await this.consultationService.findConsultationsByConsultantIdPaginated(
+        decodeURIComponent(timeZone),
+        consultantId,
         page,
         limit,
       );

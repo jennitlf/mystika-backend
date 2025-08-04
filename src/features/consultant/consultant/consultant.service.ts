@@ -1,7 +1,7 @@
 import { HttpException, HttpStatus, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { Consultant } from 'src/shared/entities/consultant.entity';
+import { Consultant } from '../../../shared/entities/consultant.entity';
 
 @Injectable()
 export class ConsultantService {

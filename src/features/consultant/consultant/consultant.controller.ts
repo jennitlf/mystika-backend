@@ -40,7 +40,7 @@ export class ConsultantController {
     return this.consultantService.findOne(id);
   }
 
-  @UseGuards(createRoleGuard(['consultant']), OwnershipGuard)
+  @UseGuards(createRoleGuard(['consultant', 'adm']), OwnershipGuard)
   @Patch(':id')
   update(
     @Param('id') id: string,
@@ -49,9 +49,10 @@ export class ConsultantController {
     return this.consultantService.update(id, updateConsultantDto);
   }
 
-  @HttpCode(HttpStatus.NO_CONTENT)
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.consultantService.remove(id);
-  }
+@UseGuards(createRoleGuard(['adm']))
+@HttpCode(HttpStatus.NO_CONTENT)
+@Delete(':id')
+remove(@Param('id') id: string) {
+  return this.consultantService.remove(id);
+}
 }

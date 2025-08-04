@@ -81,28 +81,11 @@ export class Consultant {
   @Column({
     name: 'status',
     nullable: false,
-    default: 'inativo',
+    default: 'pendente',
     type: 'varchar',
     length: 15,
   })
   status: string;
-
-  @Column({
-    name: 'payment_plan',
-    nullable: false,
-    default: 'mensal',
-    type: 'varchar',
-    length: 25,
-  })
-  payment_plan: string;
-
-  @Column({
-    name: 'appellant',
-    nullable: false,
-    type: 'boolean',
-    default: false,
-  })
-  appellant: boolean;
 
   @Column({
     name: 'about_specialties',

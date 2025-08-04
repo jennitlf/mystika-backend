@@ -1,9 +1,6 @@
-import { IsNumber, IsNotEmpty } from 'class-validator';
+import { IsNumber, IsNotEmpty, IsBoolean } from 'class-validator';
 
 export class CreateConsultantSpecialtyDto {
-  @IsNotEmpty()
-  @IsNumber()
-  readonly id_consultant: number;
 
   @IsNotEmpty()
   @IsNumber()
@@ -16,4 +13,5 @@ export class CreateConsultantSpecialtyDto {
   @IsNotEmpty()
   @IsNumber()
   readonly value_per_duration: number;
+
 }

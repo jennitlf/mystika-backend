@@ -17,6 +17,7 @@ import { CustomerSupportModule } from './features/customer/customer-support/cust
 import { EmailModule } from './features/email/email.module';
 import { AwsS3Module } from './features/aws-s3/aws-s3.module';
 import { AdmAuthModule } from './auth/adm/adm-auth.module';
+import { PaymentModule } from './features/consultant/payment/payment.module';
 
 @Module({
   imports: [
@@ -38,6 +39,7 @@ import { AdmAuthModule } from './auth/adm/adm-auth.module';
     ConsultantSupportModule,
     EmailModule,
     AwsS3Module,
+    PaymentModule,
   ],
   controllers: [AppController],
   providers: [AppService],

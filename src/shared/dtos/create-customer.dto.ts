@@ -7,6 +7,10 @@ export class CreateCustomerDto {
 
   @IsNotEmpty()
   @IsString()
+  readonly cpf: string;
+
+  @IsNotEmpty()
+  @IsString()
   readonly phone: string;
 
   @IsNotEmpty()
