@@ -32,6 +32,9 @@ export class ConsultantSpecialty {
   @Column({ name: 'value_per_duration', nullable: false, type: 'int' })
   value_per_duration: number;
 
+  @Column({ name: 'status', nullable: false, type: 'boolean', default: true })
+  status: boolean;
+
   @CreateDateColumn({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
   created_at: Date;
 

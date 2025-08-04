@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { HttpException, HttpStatus, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { ConsultantSpecialty } from 'src/shared/entities/consultant_specialty.entity';
@@ -10,10 +10,36 @@ export class ConsultantSpecialtyService {
     private readonly consultantSpecialtyRepository: Repository<ConsultantSpecialty>,
   ) {}
 
-  create(createConsultantSpecialtyDto: any) {
+  async create(createConsultantSpecialtyDto: any) {
+    const query = await this.consultantSpecialtyRepository
+      .createQueryBuilder('consultantSpecialty')
+      .innerJoinAndSelect('consultantSpecialty.consultant', 'consultant')
+      .innerJoinAndSelect('consultantSpecialty.specialty', 'specialty')
+      .where('specialty.id = :specialty', { specialty: createConsultantSpecialtyDto.id_specialty })
+      .andWhere('consultant.id = :idConsultant', { idConsultant: createConsultantSpecialtyDto.id_consultant })
+      .getOne();
+    
+    if (query.status === false) {
+
+      const consultant_specialty =
+      await this.consultantSpecialtyRepository.preload({
+         id: query.id,
+         duration: createConsultantSpecialtyDto.duration,
+         value_per_duration: createConsultantSpecialtyDto.value_per_duration,
+         status: true,
+      });
+      return this.consultantSpecialtyRepository.save(consultant_specialty);
+
+    }else if (query.status === true) {
+
+      throw new HttpException('Consultant Specialty already exists', HttpStatus.CONFLICT);
+    
+    }
+
     const consultantSpecialty = this.consultantSpecialtyRepository.create(
       createConsultantSpecialtyDto,
     );
+
     return this.consultantSpecialtyRepository.save(consultantSpecialty);
   }
 
@@ -35,8 +61,8 @@ export class ConsultantSpecialtyService {
     const query = this.consultantSpecialtyRepository
       .createQueryBuilder('consultantSpecialty')
       .innerJoinAndSelect('consultantSpecialty.consultant', 'consultant')
-      .innerJoinAndSelect('consultantSpecialty.specialty', 'specialty');
-
+      .innerJoinAndSelect('consultantSpecialty.specialty', 'specialty')
+      .where('consultantSpecialty.status = true')
     if (specialty)
       query.andWhere('specialty.name_specialty = :specialty', { specialty });
     if (minPrice)
@@ -82,11 +108,12 @@ export class ConsultantSpecialtyService {
     return consultantSpecialty;
   }
 
-  async update(id: string, updateConsultantSpecialtyDto: any) {
+  async update(id: number, updateConsultantSpecialtyDto: any) {
+    console.log(updateConsultantSpecialtyDto);
     const consultantSpecialty =
       await this.consultantSpecialtyRepository.preload({
         ...updateConsultantSpecialtyDto,
-        id: +id,
+        id_consultant: id,
       });
     if (!consultantSpecialty) {
       throw new NotFoundException(`Consultant Specialty ID: ${id} not found`);
@@ -96,12 +123,21 @@ export class ConsultantSpecialtyService {
 
   async remove(id: string) {
     const consultant_specialty =
-      await this.consultantSpecialtyRepository.findOne({
-        where: { id: +id },
+      await this.consultantSpecialtyRepository.preload({
+         id: +id,
+         status: false,
       });
     if (!consultant_specialty) {
       throw new NotFoundException(`Consultant Specialty ID: ${id} not found`);
     }
-    return this.consultantSpecialtyRepository.remove(consultant_specialty);
+    return this.consultantSpecialtyRepository.save(consultant_specialty);
   }
 }
+function where(arg0: string) {
+  throw new Error('Function not implemented.');
+}
+
+function getOne() {
+  throw new Error('Function not implemented.');
+}
+

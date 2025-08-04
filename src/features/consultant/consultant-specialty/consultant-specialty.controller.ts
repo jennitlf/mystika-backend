@@ -5,6 +5,7 @@ import {
   Body,
   Patch,
   Param,
+  Request,
   Delete,
   Query,
   HttpStatus,
@@ -75,13 +76,13 @@ export class ConsultantSpecialtyController {
   }
 
   @UseGuards(createRoleGuard(['consultant', 'adm']))
-  @Patch(':id')
+  @Patch()
   update(
-    @Param('id') id: string,
+    @Request() req,
     @Body() updateConsultantSpecialtyDto: UpdateConsultantSpecialtyDto,
   ) {
     return this.consultantSpecialtyService.update(
-      id,
+      req.id,
       updateConsultantSpecialtyDto,
     );
   }

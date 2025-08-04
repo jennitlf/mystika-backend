@@ -54,7 +54,8 @@ export class GeneralFindService {
         'specialty.id as id_specialty',
         'specialty.name_specialty as specialty_name',
       ])
-      .where('consultant.status = :status', { status: 'ativo' });
+      .where('consultant.status = :status', { status: 'ativo' })
+      .andWhere('consultantSpecialty.status = :csStatus', { csStatus: 'true' });
 
     // Filtro por nome
     if (name) {
