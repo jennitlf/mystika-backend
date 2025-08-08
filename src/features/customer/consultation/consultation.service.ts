@@ -70,7 +70,7 @@ export class ConsultationService {
   ) {
     const { id_schedule_consultant, appoinment_date_time } = createConsultationDto;
     const clientTimeZone = timeZone;
-
+    console.log('data', appoinment_date_time)
     type possiblesReturns = returnPix | returnCard | returnBoleto;
 
     if (!clientTimeZone) {
@@ -81,7 +81,7 @@ export class ConsultationService {
     }
 
     const appoinmentDateTimeForDb = appoinment_date_time;
-
+    console.log('appoinmentDateTimeForDb', appoinmentDateTimeForDb)
     const appoinmentVerification = await this.consultationRepository
       .createQueryBuilder('consultation')
       .leftJoinAndSelect('consultation.customer', 'customer') 
@@ -98,10 +98,12 @@ export class ConsultationService {
       .getOne();
 
     if (appoinmentVerification) {
-      throw new HttpException(
-        'Appointment already scheduled!',
-        HttpStatus.CONFLICT,
-      );
+      if (appoinmentVerification.status === ConsultationStatus.CONFIRMED) {
+        throw new HttpException(
+          'Appointment already scheduled!',
+          HttpStatus.CONFLICT,
+        );
+      }
     }
     
     const customer = await this.customerRepository.findOne({ where: { id: dataUser } });
@@ -217,6 +219,7 @@ export class ConsultationService {
         );
       }
     }
+    console.log('appoinmentDateTimeForDb 2', appoinmentDateTimeForDb)
     const consultationToSave = this.consultationRepository.create({
       id_customer: dataUser,
       status: newConsultationStatus || ConsultationStatus.PENDING_PAYMENT,

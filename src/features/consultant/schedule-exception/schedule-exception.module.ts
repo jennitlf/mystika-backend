@@ -21,9 +21,9 @@ export class ScheduleExceptionModule {
     consumer
       .apply(DecodeTokenMiddleware)
       .forRoutes(
-        { path: 'schedule-consultant*', method: RequestMethod.POST },
-        { path: 'schedule-consultant*', method: RequestMethod.PATCH },
-        { path: 'schedule-consultant*', method: RequestMethod.DELETE },
+        { path: 'schedule-exception*', method: RequestMethod.POST },
+        { path: 'schedule-exception*', method: RequestMethod.PATCH },
+        { path: 'schedule-exception*', method: RequestMethod.DELETE },
       );
   }
 }

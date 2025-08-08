@@ -60,13 +60,18 @@ export class ScheduleConsultantService {
     const now = this.dateUtilsService.getZonedDate(new Date(), timeZone);
     const startOfToday = this.dateUtilsService.getStartOfDayInZone(now, timeZone);
   
-    const schedules = await this.scheduleConsultantRepository.find({
-      where: {
-        id_consultant_specialty: idConsultantSpecialty,
-        ...(date && { date: Equal(new Date(date)) }),
-      },
-      relations: ['scheduleException', 'consultation', 'consultantSpecialty'],
-    });
+    let query = this.scheduleConsultantRepository
+      .createQueryBuilder('scheduleConsultant')
+      .where('scheduleConsultant.id_consultant_specialty = :id', { id: idConsultantSpecialty })
+      .leftJoinAndSelect('scheduleConsultant.scheduleException', 'scheduleException')
+      .leftJoinAndSelect('scheduleConsultant.consultation', 'consultation')
+      .leftJoinAndSelect('scheduleConsultant.consultantSpecialty', 'consultantSpecialty');
+
+    if (date) {
+      query = query.andWhere('scheduleConsultant.date = :date', { date });
+    }
+
+    const schedules = await query.getMany();
   
     return schedules
       .filter((schedule) => {
@@ -104,7 +109,7 @@ export class ScheduleConsultantService {
             return formattedExceptionTime;
           })
           .filter((time) => time !== null);
-  
+
         availableTimes = availableTimes.filter(
           (time) => {
             const isAvailable = !unavailableExceptionTimes.includes(this.formatTime(time, timeZone));
@@ -120,6 +125,7 @@ export class ScheduleConsultantService {
         }
   
         const bookedTimes = schedule.consultation
+          .filter(c => c.status === 'confirmada')
           .map((c) => {
             const consultationDateTimeInClientZone = this.dateUtilsService.getZonedDate(
               new Date(c.appoinment_date_time),
@@ -146,7 +152,8 @@ export class ScheduleConsultantService {
         };
       });
   }
-  
+
+
 
   async createRecurring(createRecurringScheduleDto: any, timeZone: string) {
     const {

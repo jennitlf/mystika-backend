@@ -5,6 +5,7 @@ import { ScheduleException } from 'src/shared/entities/schedule_exception.entity
 import { Repository } from 'typeorm';
 import { ScheduleConsultantService } from '../schedule-consultant/schedule-consultant.service';
 import { DateUtilsService } from 'src/shared/utils/date.utils';
+import { json } from 'body-parser';
 
 @Injectable()
 export class ScheduleExceptionService {
@@ -19,22 +20,23 @@ export class ScheduleExceptionService {
 
   async create(timeZone: string, createScheduleExceptionDto: any) {
     let timeLots = null;
-    
     const date = createScheduleExceptionDto.unavailable_date_time.split('T')[0];
     const query = this.scheduleConsultantRepository
     .createQueryBuilder('scheduleConsultant')
-    .where('scheduleConsultant.id = :id_schedule_consultant', {id: createScheduleExceptionDto.id_schedule_consultant})
+    .where('scheduleConsultant.id = :id', {id: createScheduleExceptionDto.id_schedule_consultant})
     .innerJoin('scheduleConsultant.consultantSpecialty', 'consultantSpecialty')
     .select([
       'scheduleConsultant.id',
       'consultantSpecialty.id',
     ])
     const schedule = await query.getMany();
+
     if (!schedule || schedule.length === 0) {
       throw new NotFoundException(
         `Schedule consultant with id ${createScheduleExceptionDto.id_schedule_consultant} not found.`,
       );
     }
+    
     if (schedule.some(s => s.consultantSpecialty && s.consultantSpecialty.id)) {
       const consultantSpecialtyId = schedule.find(
         s => s.consultantSpecialty && s.consultantSpecialty.id
@@ -77,16 +79,12 @@ export class ScheduleExceptionService {
         it is not possible to make an already scheduled time unavailable.`,
       );
     }
-    const dateExceptionLocal = this.dateUtilsService.getZonedDate(
-      new Date(createScheduleExceptionDto.unavailable_date_time),
-      timeZone,
-    );
-    
+    const unavailableDateTtimeUtc = new Date(createScheduleExceptionDto.unavailable_date_time).toISOString()
     const schedule_exception = this.scheduleExceptionRepository.create({
       id_schedule_consultant: createScheduleExceptionDto.id_schedule_consultant,
-      date_exception: dateExceptionLocal,
+      date_exception: date,
       unavailable_time: createScheduleExceptionDto.unavailable_time,
-      unavailable_date_time: dateExceptionLocal.toISOString(),
+      unavailable_date_time: unavailableDateTtimeUtc,
       reason: createScheduleExceptionDto.reason,
       
     });
